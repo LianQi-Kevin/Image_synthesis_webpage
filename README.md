@@ -23,7 +23,7 @@ wget -O models/ldm/text2img-large/model.ckpt https://ommer-lab.com/files/latent-
 #### Step - 3. Sample
 ```shell
 python scripts/txt2img.py \
-  --prompt "a virus monster is playing guitar, oil on canvas" \
+  --prompt "sunset, sunrays showing through the woods in front, clear night sky, stars visible, mountain in the back, lake in front reflecting the night sky and mountain, photo realistic, 8K, ultra high definition, cinematic" \
   --config configs/latent-diffusion/txt2img-1p4B-eval.yaml \
   --ckpt models/ldm/text2img-large/model.ckpt \
   --ddim_eta 0.0 --n_samples 4 --n_iter 4 --scale 5.0  --ddim_steps 50
