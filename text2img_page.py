@@ -45,7 +45,7 @@ def gr_advanced_page():
                     prompt = gr.Textbox(label="提示词", lines=3)
                     with gr.Row():
                         go_button = gr.Button("开始绘画", elem_id="go_button")
-                        config_button = gr.Button("控制面板", elem_id="control_button")
+                        # config_button = gr.Button("控制面板", elem_id="control_button")
                     output_img = gr.Image()
                 # with gr.Column(visible=CP_interactive) as advanced_page:
                 with gr.Column(visible=True) as advanced_page:
@@ -59,7 +59,7 @@ def gr_advanced_page():
                     with gr.Row():
                         img_H_slider = gr.Slider(minimum=256, maximum=512, step=64, value=256, label="img_height", interactive=True)
                         img_W_slider = gr.Slider(minimum=256, maximum=512, step=64, value=256, label="img_width", interactive=True)
-                    explain_markdown = gr.Markdown(
+                    gr.Markdown(
                         value="""
                         ####
                         - **seed**: the seed (for reproducible sampling).
@@ -76,13 +76,13 @@ def gr_advanced_page():
         seed_box.style(rounded=True)
 
         # action
-        config_button.click(control_panel_interactive,
-                            inputs=[advanced_page],
-                            outputs=[advanced_page])
-        # go_button.click(gr_interface,
-        #                 inputs=[prompt, seed_box, img_H_slider, img_W_slider,
-        #                         n_sample_slider, n_iter_slider, ddim_step_slider, ddim_sta_slider],
-        #                 outputs=[output_img])
+        # config_button.click(control_panel_interactive,
+        #                     inputs=[advanced_page],
+        #                     outputs=[advanced_page])
+        go_button.click(gr_interface,
+                        inputs=[prompt, seed_box, img_H_slider, img_W_slider,
+                                n_sample_slider, n_iter_slider, ddim_step_slider, ddim_sta_slider],
+                        outputs=[output_img])
     advanced_app.launch(server_port=6006, share=False, quiet=False, enable_queue=True, show_error=True)
 
 
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     gr.close_all()
 
     # init text2img
-    # txt2img = text2img(ckpt=opt.ckpt, config=opt.config, output_dir=opt.out_dir)
+    txt2img = text2img(ckpt=opt.ckpt, config=opt.config, output_dir=opt.out_dir)
 
     # control panel interactive
     CP_interactive = False
