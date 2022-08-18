@@ -18,7 +18,7 @@ from tqdm import tqdm, trange
 
 
 class text2img(object):
-    def __init__(self, ckpt, config, n_rows=0, output_dir="outputs/txt2img-samples", precision="auto_cast"):
+    def __init__(self, ckpt, config, n_rows=2, output_dir="outputs/txt2img-samples", precision="auto_cast"):
         # load_model
         self.ckpt = ckpt
         self.config = config
@@ -68,7 +68,6 @@ class text2img(object):
 
         self.n_samples = n_samples
         self.n_iter = n_iter
-        # self.n_rows = n_samples
 
         seed_everything(seed)
 
@@ -120,7 +119,7 @@ class text2img(object):
                             all_samples.append(x_samples_ddim)
         return all_samples
 
-    def save_img(self, all_samples, single_save=True, grid_save=True):
+    def save_img(self, all_samples, single_save=True, grid_save=True, n_rows=None):
         if single_save:
             for img in iter(self.postprocess(all_samples, single=True)):
                 single_img_path = os.path.join(self.sample_path, f"{self.base_count:05}.png")
@@ -128,6 +127,8 @@ class text2img(object):
                 print("Successful save {}".format(single_img_path))
                 self.base_count += 1
         if grid_save:
+            if n_rows is not None:
+                self.n_rows = n_rows
             for img in iter(self.postprocess(all_samples, single=False)):
                 grid_img_path = os.path.join(self.output_dir, f'grid-{self.grid_count:04}.png')
                 img.save(grid_img_path)
