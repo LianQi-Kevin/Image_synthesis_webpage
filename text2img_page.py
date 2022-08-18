@@ -1,14 +1,17 @@
 import gradio as gr
 import numpy as np
 from utils.text2img import make_args, text2img
+import os
 
 
 def gr_interface(prompt, seed=np.random.randint(1, 100000), img_H=256, img_W=256,
                  n_samples=4, n_iter=1, ddim_steps=50, ddim_eta=0.0, n_rows=2, scale=5.0):
+    global callback
     global txt2img
+    grid_save_path = os.path.join(txt2img.output_dir, f'grid-{txt2img.grid_count:04}.png')
     all_samples = txt2img.synthesis(prompt, seed=seed, n_samples=int(n_samples), n_iter=int(n_iter),
                                     img_H=img_H, img_W=img_W, ddim_steps=int(ddim_steps), scale=scale, ddim_eta=ddim_eta)
-    return txt2img.save_img(all_samples, single_save=True, grid_save=True, n_rows=n_rows)[0]
+    return txt2img.save_img(all_samples, single_save=True, grid_save=True, n_rows=n_rows)[0], str(grid_save_path)
 
 
 def gr_basic_page():
@@ -36,17 +39,20 @@ def control_panel_interactive(advanced_page):
 
 def gr_advanced_page():
     global CP_interactive
+    global callback
+
     with gr.Blocks(title="109美术高中AI与美术融合课", css="utils/text2img.css") as advanced_app:
         # widgets
         with gr.Column():
             gr.Markdown("## 109美术高中AI与美术融合课")
             with gr.Row():
                 with gr.Column():
-                    prompt = gr.Textbox(label="提示词", lines=3)
+                    prompt_box = gr.Textbox(label="提示词", lines=3)
                     with gr.Row():
                         go_button = gr.Button("开始绘画", elem_id="go_button")
                         # config_button = gr.Button("控制面板", elem_id="control_button")
-                    output_img = gr.Image()
+                    output_img = gr.Image(interactive=False)
+                    grid_save_path = gr.Textbox(interactive=False, visible=True, label="grid_img_path")
                 # with gr.Column(visible=CP_interactive) as advanced_page:
                 with gr.Column(visible=True) as advanced_page:
                     seed_box = gr.Number(interactive=True, label="seed", value=np.random.randint(1, 10000000))
@@ -75,14 +81,23 @@ def gr_advanced_page():
         go_button.style(rounded=True, full_width="True")
         seed_box.style(rounded=True)
 
+        # CSV logger
+        callback.setup([prompt_box, seed_box, img_H_slider, img_W_slider,
+                        ddim_step_slider, ddim_sta_slider, n_sample_slider, n_iter_slider, output_img], "flagged_data_points")
+
         # action
         # config_button.click(control_panel_interactive,
         #                     inputs=[advanced_page],
         #                     outputs=[advanced_page])
         go_button.click(gr_interface,
-                        inputs=[prompt, seed_box, img_H_slider, img_W_slider,
+                        inputs=[prompt_box, seed_box, img_H_slider, img_W_slider,
                                 n_sample_slider, n_iter_slider, ddim_step_slider, ddim_sta_slider],
-                        outputs=[output_img])
+                        outputs=[output_img, grid_save_path])
+        grid_save_path.change(lambda *args: callback.flag(args),
+                              inputs=[prompt_box, seed_box, img_H_slider, img_W_slider,
+                                      ddim_step_slider, ddim_sta_slider, n_sample_slider, n_iter_slider],
+                                      # ddim_step_slider, ddim_sta_slider, n_sample_slider, n_iter_slider, grid_save_path],
+                              outputs=[])
     advanced_app.launch(server_port=6006, share=False, quiet=False, enable_queue=True, show_error=True)
 
 
@@ -105,6 +120,8 @@ if __name__ == '__main__':
 
     # control panel interactive
     CP_interactive = False
+
+    callback = gr.CSVLogger()
 
     # gr_basic_page()
     gr_advanced_page()

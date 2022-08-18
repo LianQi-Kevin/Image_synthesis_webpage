@@ -29,6 +29,11 @@ class text2img(object):
         self.n_iter = 4
         self.n_samples = 4
         self.n_rows = n_rows if n_rows > 0 else self.n_samples
+        self.latent_channel = 4
+        self.downsampling_factor = 8
+        self.plms = False
+        self.fixed_code = False
+        self.scale = 5.0
 
         # output
         # # grid
@@ -61,10 +66,19 @@ class text2img(object):
         return model, device
 
     def synthesis(self, prompt, img_H=256, img_W=256, seed=42,
-                  n_samples=4, n_iter=4, ddim_steps=50, scale=5.0, ddim_eta=0.0,
-                  plms=False, fixed_code=False, latent_channel=4, downsampling_factor=8):
+                  n_samples=4, n_iter=4, ddim_steps=50, scale=None, ddim_eta=0.0,
+                  plms=None, fixed_code=None, latent_channel=None, downsampling_factor=None):
 
-        print('Start synthesis \n Prompt is "{}"'.format(prompt))
+        if plms is None:
+            plms = self.plms
+        if fixed_code is None:
+            fixed_code = self.fixed_code
+        if latent_channel is None:
+            latent_channel = self.latent_channel
+        if downsampling_factor is None:
+            downsampling_factor = self.downsampling_factor
+        if scale is None:
+            scale = self.scale
 
         self.n_samples = n_samples
         self.n_iter = n_iter

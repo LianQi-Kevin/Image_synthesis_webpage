@@ -22,3 +22,9 @@ wget -O models/ldm/text2img-large/model.ckpt https://ommer-lab.com/files/latent-
 mkdir -p /root/autodl-tmp/outputs
 ln -s /root/web_page/outputs /root/autodl-tmp/outputs
 ```
+
+#### Step - 4. change csv.py
+```shell
+vim /root/miniconda3/envs/ldm/lib/python3.8/csv.py
+```
+> line 56  `delimiter = ','` to `delimiter = ';'`
