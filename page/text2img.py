@@ -1,5 +1,6 @@
 import argparse
 import os
+import time
 from contextlib import nullcontext
 
 import numpy as np
@@ -17,10 +18,7 @@ from tqdm import tqdm, trange
 
 
 class text2img(object):
-    def __init__(self, opt, ckpt, config, n_rows=0, output_dir="outputs/txt2img-samples", precision="auto_cast"):
-        # opt
-        self.opt = opt
-
+    def __init__(self, ckpt, config, n_rows=0, output_dir="outputs/txt2img-samples", precision="auto_cast"):
         # load_model
         self.ckpt = ckpt
         self.config = config
@@ -28,7 +26,6 @@ class text2img(object):
 
         # synthesis
         self.precision = precision
-        # self.dyn = opt.dyn
         self.n_iter = 4
         self.n_samples = 4
         self.n_rows = n_rows if n_rows > 0 else self.n_samples
@@ -67,11 +64,11 @@ class text2img(object):
                   n_samples=4, n_iter=4, ddim_steps=50, scale=5.0, ddim_eta=0.0,
                   plms=False, fixed_code=False, latent_channel=4, downsampling_factor=8):
 
-        print("Start synthesis \n Prompt is {}".format(prompt))
+        print('Start synthesis \n Prompt is "{}"'.format(prompt))
 
         self.n_samples = n_samples
         self.n_iter = n_iter
-        self.n_rows = n_samples
+        # self.n_rows = n_samples
 
         seed_everything(seed)
 
@@ -125,19 +122,28 @@ class text2img(object):
 
     def save_img(self, all_samples, single_save=True, grid_save=True):
         if single_save:
-            for img in iter(self._postprocess(all_samples, single=True)):
+            for img in iter(self.postprocess(all_samples, single=True)):
                 single_img_path = os.path.join(self.sample_path, f"{self.base_count:05}.png")
                 img.save(single_img_path)
                 print("Successful save {}".format(single_img_path))
                 self.base_count += 1
         if grid_save:
-            for img in iter(self._postprocess(all_samples, single=False)):
+            for img in iter(self.postprocess(all_samples, single=False)):
                 grid_img_path = os.path.join(self.output_dir, f'grid-{self.grid_count:04}.png')
                 img.save(grid_img_path)
                 print("Successful save {}".format(grid_img_path))
                 self.grid_count += 1
 
-    def _postprocess(self, all_samples, single=False):
+        if single_save and grid_save:
+            return self.postprocess(all_samples, single=False)
+        elif not single_save and not grid_save:
+            return self.postprocess(all_samples, single=False)
+        elif not single_save and grid_save:
+            return self.postprocess(all_samples, single=False)
+        else:
+            return self.postprocess(all_samples, single=True)
+
+    def postprocess(self, all_samples, single=False):
         if single:
             images_list = list()
             for x_samples_ddim in all_samples:
@@ -195,10 +201,15 @@ def make_args():
 
 
 def main_class(opt):
-    txt2img = text2img(opt, opt.ckpt, opt.config, output_dir=opt.out_dir)
+    txt2img = text2img(opt.ckpt, opt.config, output_dir=opt.out_dir)
+    print("Successful init class")
+    tic_time = time.time()
     all_samples = txt2img.synthesis(opt.prompt, img_H=256, img_W=256, seed=np.random.randint(1, 1000000),
                                     n_samples=3, n_iter=3, ddim_steps=50, scale=5.0, ddim_eta=0.0)
+    # all_samples = txt2img.synthesis(opt.prompt, img_H=384, img_W=1024, seed=2156486,
+    #                                 n_samples=1, n_iter=1, ddim_steps=50, scale=5.0, ddim_eta=1.0)
     txt2img.save_img(all_samples, single_save=True, grid_save=True)
+    print(time.time() - tic_time)
 
 
 if __name__ == "__main__":
