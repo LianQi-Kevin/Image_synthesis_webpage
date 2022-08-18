@@ -176,7 +176,7 @@ def make_args():
     parser.add_argument("--fixed_code", action='store_true',
                         help="if enabled, uses the same starting code across all samples ", )
     parser.add_argument("--ddim_eta", type=float, default=0.0,
-                        help="ddim eta (eta=0.0 corresponds to deterministic sampling", )
+                        help="ddim eta (eta=0.0 corresponds to deterministic sampling)", )
     parser.add_argument("--n_iter", type=int, default=1, help="sample this often", )
     parser.add_argument("--H", type=int, default=256, help="image height, in pixel space", )
     parser.add_argument("--W", type=int, default=256, help="image width, in pixel space", )

@@ -24,39 +24,66 @@ def gr_basic_page():
     basic_app.launch(server_port=6006, share=False, quiet=False, enable_queue=True, show_error=True)
 
 
+def control_panel_interactive(seed_box, img_H_slider, img_W_slider, n_sample_slider, n_iter_slider, ddim_step_slider, ddim_sta_slider, explain_markdown):
+    global CP_interactive
+    if CP_interactive:
+        CP_interactive = False
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+    else:
+        CP_interactive = True
+        return gr.update(visible=True), gr.update(visible=True), gr.update(visible=True), gr.update(visible=True), gr.update(visible=True), gr.update(visible=True), gr.update(visible=True), gr.update(visible=True)
+
+
 def gr_advanced_page():
-    with gr.Blocks(title="109美术高中AI与美术融合课") as advanced_app:
+    global CP_interactive
+    with gr.Blocks(title="109美术高中AI与美术融合课", css="utils/text2img.css") as advanced_app:
         # widgets
         with gr.Column():
             gr.Markdown("## 109美术高中AI与美术融合课")
             with gr.Row():
                 with gr.Column():
                     prompt = gr.Textbox(label="提示词", lines=3)
-                    go_button = gr.Button("开始绘画")
+                    with gr.Row():
+                        go_button = gr.Button("开始绘画", elem_id="go_button")
+                        config_button = gr.Button("控制面板", elem_id="control_button")
                     output_img = gr.Image()
+                    # gr.HTML('<a href="outputs/txt2img-samples/grid-0001.png" download="grid-0001.png">点击下载</a>')
                 with gr.Column():
-                    seed_box = gr.Number(interactive=True, label="seed", value=np.random.randint(1, 10000000))
+                    seed_box = gr.Number(interactive=True, label="seed", value=np.random.randint(1, 10000000), visible=CP_interactive)
                     with gr.Row():
-                        ddim_step_slider = gr.Slider(minimum=30, maximum=80, step=1, value=50, label="ddim_step", interactive=True)
-                        ddim_sta_slider = gr.Slider(minimum=0.0, maximum=1.0, step=0.1, value=0.0, label="ddim_eta", interactive=True)
+                        ddim_step_slider = gr.Slider(minimum=30, maximum=80, step=1, value=50, label="ddim_step", interactive=True, visible=CP_interactive)
+                        ddim_sta_slider = gr.Slider(minimum=0.0, maximum=1.0, step=0.1, value=0.0, label="ddim_eta", interactive=True, visible=CP_interactive)
                     with gr.Row():
-                        n_sample_slider = gr.Slider(minimum=1, maximum=5, step=1, value=4, label="n_sample", interactive=True)
-                        n_iter_slider = gr.Slider(minimum=1, maximum=5, step=1, value=1, label="n_iter", interactive=True)
+                        n_sample_slider = gr.Slider(minimum=1, maximum=5, step=1, value=4, label="n_sample", interactive=True, visible=CP_interactive)
+                        n_iter_slider = gr.Slider(minimum=1, maximum=5, step=1, value=1, label="n_iter", interactive=True, visible=CP_interactive)
                     with gr.Row():
-                        img_H_slider = gr.Slider(minimum=256, maximum=512, step=64, value=256, label="图像高度", interactive=True)
-                        img_W_slider = gr.Slider(minimum=256, maximum=512, step=64, value=256, label="图像宽度", interactive=True)
+                        img_H_slider = gr.Slider(minimum=256, maximum=512, step=64, value=256, label="img_height", interactive=True, visible=CP_interactive)
+                        img_W_slider = gr.Slider(minimum=256, maximum=512, step=64, value=256, label="img_width", interactive=True, visible=CP_interactive)
+                    explain_markdown = gr.Markdown(
+                        value="""
+                        ####
+                        - **seed**: the seed (for reproducible sampling).
+                        - **ddim_step**: number of ddim sampling steps.
+                        - **ddim_eta**: ddim eta (eta=0.0 corresponds to deterministic sampling).
+                        - **n_sample**: how many samples to produce for each given prompt. A.k.a batch size.
+                        - **n_iter**: sample this often.
+                        - **img_height**: image height, in pixel space.
+                        - **img_width**: image width, in pixel space.
+                        """,
+                        visible=CP_interactive)
 
         # style
-        go_button.style(rounded=True, full_width=True)
+        go_button.style(rounded=True, full_width="True")
         seed_box.style(rounded=True)
 
         # action
-        go_button.click(gr_interface,
-                        inputs=[prompt, seed_box,
-                                img_H_slider, img_W_slider,
-                                n_sample_slider, n_iter_slider,
-                                ddim_step_slider, ddim_sta_slider],
-                        outputs=[output_img])
+        config_button.click(control_panel_interactive,
+                            inputs=[seed_box, img_H_slider, img_W_slider, n_sample_slider, n_iter_slider, ddim_step_slider, ddim_sta_slider, explain_markdown],
+                            outputs=[seed_box, img_H_slider, img_W_slider, n_sample_slider, n_iter_slider, ddim_step_slider, ddim_sta_slider, explain_markdown])
+        # go_button.click(gr_interface,
+        #                 inputs=[prompt, seed_box, img_H_slider, img_W_slider,
+        #                         n_sample_slider, n_iter_slider, ddim_step_slider, ddim_sta_slider],
+        #                 outputs=[output_img])
     advanced_app.launch(server_port=6006, share=False, quiet=False, enable_queue=True, show_error=True)
 
 
@@ -66,9 +93,7 @@ if __name__ == '__main__':
 
     # ----------
     # 调试用 覆盖args
-    # opt.config = "/root/latent-Diffusion-Models/configs/latent-diffusion/txt2img-1p4B-eval.yaml"
     opt.config = "./configs/ldm/txt2img-1p4B-eval.yaml"
-    # opt.ckpt = "/root/latent-Diffusion-Models/models/ldm/text2img-large/model.ckpt"
     opt.ckpt = "./models/ldm/text2img-large/model.ckpt"
     opt.out_dir = "./outputs/txt2img-samples"  # output dir
     # ----------
@@ -77,7 +102,10 @@ if __name__ == '__main__':
     gr.close_all()
 
     # init text2img
-    txt2img = text2img(ckpt=opt.ckpt, config=opt.config, output_dir=opt.out_dir)
+    # txt2img = text2img(ckpt=opt.ckpt, config=opt.config, output_dir=opt.out_dir)
+
+    # control panel interactive
+    CP_interactive = False
 
     # gr_basic_page()
     gr_advanced_page()
