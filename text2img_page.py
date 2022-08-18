@@ -24,14 +24,14 @@ def gr_basic_page():
     basic_app.launch(server_port=6006, share=False, quiet=False, enable_queue=True, show_error=True)
 
 
-def control_panel_interactive(seed_box, img_H_slider, img_W_slider, n_sample_slider, n_iter_slider, ddim_step_slider, ddim_sta_slider, explain_markdown):
+def control_panel_interactive(advanced_page):
     global CP_interactive
     if CP_interactive:
         CP_interactive = False
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+        return gr.update(visible=False)
     else:
         CP_interactive = True
-        return gr.update(visible=True), gr.update(visible=True), gr.update(visible=True), gr.update(visible=True), gr.update(visible=True), gr.update(visible=True), gr.update(visible=True), gr.update(visible=True)
+        return gr.update(visible=True)
 
 
 def gr_advanced_page():
@@ -47,18 +47,18 @@ def gr_advanced_page():
                         go_button = gr.Button("开始绘画", elem_id="go_button")
                         config_button = gr.Button("控制面板", elem_id="control_button")
                     output_img = gr.Image()
-                    # gr.HTML('<a href="outputs/txt2img-samples/grid-0001.png" download="grid-0001.png">点击下载</a>')
-                with gr.Column():
-                    seed_box = gr.Number(interactive=True, label="seed", value=np.random.randint(1, 10000000), visible=CP_interactive)
+                # with gr.Column(visible=CP_interactive) as advanced_page:
+                with gr.Column(visible=True) as advanced_page:
+                    seed_box = gr.Number(interactive=True, label="seed", value=np.random.randint(1, 10000000))
                     with gr.Row():
-                        ddim_step_slider = gr.Slider(minimum=30, maximum=80, step=1, value=50, label="ddim_step", interactive=True, visible=CP_interactive)
-                        ddim_sta_slider = gr.Slider(minimum=0.0, maximum=1.0, step=0.1, value=0.0, label="ddim_eta", interactive=True, visible=CP_interactive)
+                        ddim_step_slider = gr.Slider(minimum=30, maximum=80, step=1, value=50, label="ddim_step", interactive=True)
+                        ddim_sta_slider = gr.Slider(minimum=0.0, maximum=1.0, step=0.1, value=0.0, label="ddim_eta", interactive=True)
                     with gr.Row():
-                        n_sample_slider = gr.Slider(minimum=1, maximum=5, step=1, value=4, label="n_sample", interactive=True, visible=CP_interactive)
-                        n_iter_slider = gr.Slider(minimum=1, maximum=5, step=1, value=1, label="n_iter", interactive=True, visible=CP_interactive)
+                        n_sample_slider = gr.Slider(minimum=1, maximum=5, step=1, value=4, label="n_sample", interactive=True)
+                        n_iter_slider = gr.Slider(minimum=1, maximum=5, step=1, value=1, label="n_iter", interactive=True)
                     with gr.Row():
-                        img_H_slider = gr.Slider(minimum=256, maximum=512, step=64, value=256, label="img_height", interactive=True, visible=CP_interactive)
-                        img_W_slider = gr.Slider(minimum=256, maximum=512, step=64, value=256, label="img_width", interactive=True, visible=CP_interactive)
+                        img_H_slider = gr.Slider(minimum=256, maximum=512, step=64, value=256, label="img_height", interactive=True)
+                        img_W_slider = gr.Slider(minimum=256, maximum=512, step=64, value=256, label="img_width", interactive=True)
                     explain_markdown = gr.Markdown(
                         value="""
                         ####
@@ -69,8 +69,7 @@ def gr_advanced_page():
                         - **n_iter**: sample this often.
                         - **img_height**: image height, in pixel space.
                         - **img_width**: image width, in pixel space.
-                        """,
-                        visible=CP_interactive)
+                        """)
 
         # style
         go_button.style(rounded=True, full_width="True")
@@ -78,8 +77,8 @@ def gr_advanced_page():
 
         # action
         config_button.click(control_panel_interactive,
-                            inputs=[seed_box, img_H_slider, img_W_slider, n_sample_slider, n_iter_slider, ddim_step_slider, ddim_sta_slider, explain_markdown],
-                            outputs=[seed_box, img_H_slider, img_W_slider, n_sample_slider, n_iter_slider, ddim_step_slider, ddim_sta_slider, explain_markdown])
+                            inputs=[advanced_page],
+                            outputs=[advanced_page])
         # go_button.click(gr_interface,
         #                 inputs=[prompt, seed_box, img_H_slider, img_W_slider,
         #                         n_sample_slider, n_iter_slider, ddim_step_slider, ddim_sta_slider],
