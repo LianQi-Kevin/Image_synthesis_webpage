@@ -83,7 +83,7 @@ def gr_advanced_page():
 
         # CSV logger
         callback.setup([prompt_box, seed_box, img_H_slider, img_W_slider,
-                        ddim_step_slider, ddim_sta_slider, n_sample_slider, n_iter_slider, output_img], "flagged_data_points")
+                        ddim_step_slider, ddim_sta_slider, n_sample_slider, n_iter_slider, grid_save_path], "flagged_data_points")
 
         # action
         # config_button.click(control_panel_interactive,
@@ -95,8 +95,8 @@ def gr_advanced_page():
                         outputs=[output_img, grid_save_path])
         grid_save_path.change(lambda *args: callback.flag(args),
                               inputs=[prompt_box, seed_box, img_H_slider, img_W_slider,
-                                      ddim_step_slider, ddim_sta_slider, n_sample_slider, n_iter_slider],
-                                      # ddim_step_slider, ddim_sta_slider, n_sample_slider, n_iter_slider, grid_save_path],
+                                      # ddim_step_slider, ddim_sta_slider, n_sample_slider, n_iter_slider],
+                                      ddim_step_slider, ddim_sta_slider, n_sample_slider, n_iter_slider, grid_save_path],
                               outputs=[])
     advanced_app.launch(server_port=6006, share=False, quiet=False, enable_queue=True, show_error=True)
 
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     # 调试用 覆盖args
     opt.config = "./configs/ldm/txt2img-1p4B-eval.yaml"
     opt.ckpt = "./models/ldm/text2img-large/model.ckpt"
-    opt.out_dir = "./outputs/txt2img-samples"  # output dir
+    opt.out_dir = "outputs/txt2img-samples"  # output dir
     # ----------
 
     # kill all old gradio wrap

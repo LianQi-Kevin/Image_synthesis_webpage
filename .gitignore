@@ -1,0 +1,5 @@
+*.ckpt
+*.db
+.idea
+/latent_diffusion/outputs/
+/latent_diffusion/flagged_data_points/

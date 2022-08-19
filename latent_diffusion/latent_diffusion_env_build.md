@@ -11,20 +11,15 @@ conda activate ldm
 pip install gradio
 ```
 
-#### Step - 2. Download model
+#### Step - 2. link output_dir
+```shell
+mkdir -p /root/autodl-tmp/outputs
+mkdir -p /root/autodl-tmp/models
+ln -s /root/web_page/latent_diffusion/outputs /root/autodl-tmp/outputs
+ln -s /root/web_page/latent_diffusion/models /root/autodl-tmp/models
+```
+#### Step - 3. Download model
 ```shell
 mkdir -p models/ldm/text2img-large/
 wget -O models/ldm/text2img-large/model.ckpt https://ommer-lab.com/files/latent-diffusion/nitro/txt2img-f8-large/model.ckpt
 ```
-
-#### Step - 3. link output_dir
-```shell
-mkdir -p /root/autodl-tmp/outputs
-ln -s /root/web_page/outputs /root/autodl-tmp/outputs
-```
-
-#### Step - 4. change csv.py
-```shell
-vim /root/miniconda3/envs/ldm/lib/python3.8/csv.py
-```
-> line 56  `delimiter = ','` to `delimiter = ';'`
