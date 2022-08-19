@@ -47,7 +47,7 @@ def gr_advanced_page():
             gr.Markdown("## 109美术高中AI与美术融合课")
             with gr.Row():
                 with gr.Column():
-                    prompt_box = gr.Textbox(label="提示词", lines=3)
+                    prompt_box = gr.Textbox(label="提示词", lines=1)
                     with gr.Row():
                         go_button = gr.Button("开始绘画", elem_id="go_button")
                         # config_button = gr.Button("控制面板", elem_id="control_button")

@@ -15,8 +15,8 @@ pip install gradio
 ```shell
 mkdir -p /root/autodl-tmp/outputs
 mkdir -p /root/autodl-tmp/models
-ln -s /root/web_page/latent_diffusion/outputs /root/autodl-tmp/outputs
-ln -s /root/web_page/latent_diffusion/models /root/autodl-tmp/models
+ln -s /root/Image_synthesis_webpage/latent_diffusion/outputs /root/autodl-tmp/outputs
+ln -s /root/Image_synthesis_webpage/latent_diffusion/models /root/autodl-tmp/models
 ```
 #### Step - 3. Download model
 ```shell
