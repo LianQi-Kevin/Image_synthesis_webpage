@@ -21,3 +21,16 @@ environment build note: [min-dalle_env_build.md](min-dalle/min-dalle_env_build.m
 source repository: [CompVis/stable-diffusion](https://github.com/CompVis/stable-diffusion)
 
 environment build note: [stable-diffusion_env_build.md](stable-diffusion/stable-diffusion_env_build.md)
+
+### 4. DALL·E mini
+
+source repository: [borisdayma/dalle-mini](https://github.com/borisdayma/dalle-mini)
+
+environment build note: [dalle-mini_env_build.md](dalle-mini/dalle-mini_env_build.md)
+
+
+---
+
+#### 2022-08-22 note
+1. stable-diffusion's model needs approval, no reply has been received
+2. DALL·E-mini environment has not been deployed successfully, and the notes are still wrong
