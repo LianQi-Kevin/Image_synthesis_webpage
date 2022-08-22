@@ -7,3 +7,5 @@
 /stable_diffusion/models/stable-diffusion-v1-3-diffusers/
 /min-dalle/log.log
 /dalle-mini/models/
+/min-dalle/outputs/
+/min-dalle/test.py
