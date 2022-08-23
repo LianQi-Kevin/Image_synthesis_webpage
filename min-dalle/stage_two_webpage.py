@@ -139,7 +139,7 @@ def gradio_2stage_app():
                 # 左半边
                 with gr.Column():
                     with gr.Group():
-                        prompt_box = gr.Textbox(label="提示词", lines=1)
+                        prompt_box = gr.Textbox(label="提示词 - （请勿超过64个词）", lines=1)
                         go_button = gr.Button("开始绘画", elem_id="go_button")
                     output_gallery = gr.Gallery(interactive=False, show_label=False, elem_id="output_gallery")
 
@@ -181,7 +181,6 @@ def gradio_2stage_app():
                     gr.Markdown(
                         """
                         ####
-                        - **Input Text**: For long prompts, only the first 64 text tokens will be used to generate the image.
                         - **Seamless**: Tile images in image token space instead of pixel space.
                         - **Temperature**: High temperature increases the probability of sampling low scoring image tokens.
                         - **Top-k**: Each image token is sampled from the top-k scoring tokens.

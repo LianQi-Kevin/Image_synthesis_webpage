@@ -8,6 +8,7 @@ import torch.backends.cuda
 import torch.backends.cudnn
 from PIL import Image
 from min_dalle import MinDalle
+from glob import glob
 
 
 def log_set():
@@ -45,14 +46,14 @@ def save_img(images, grid_size=3, save_path="outputs", save_single=True, save_gr
 
     # save samples
     if save_single:
-        samples_basic_i = len(os.listdir(sample_path))
+        samples_basic_i = len(glob(f"{sample_path}/.png"))
         for index, img in enumerate(images):
             img.save(os.path.join(sample_path, f"{(index + samples_basic_i):05}.png"))
             logging.info(f"Successful save {(index + samples_basic_i):05}.png")
 
     # save grid
     if save_grid:
-        grid_basic_i = len(os.listdir(save_path)) - 1
+        grid_basic_i = len(glob(f"{save_path}/.png"))
         concat_img(images, grid_size=grid_size).save(os.path.join(save_path, f"grid-{grid_basic_i:04}.png"))
         logging.info(f"Successful save grid-{grid_basic_i:04}.png")
         return f"grid-{grid_basic_i:04}.png"
@@ -62,18 +63,11 @@ def update_random_seed(advanced_page):
     if advanced_page:
         return gr.update(interactive=False, value=-1)
     else:
-        return gr.update(interactive=True, value=np.random.randint(1, 10000000))
+        return gr.update(interactive=True, value=np.random.randint(0, 2 ** 32 - 1))
 
 
 def run_model(prompt, seed=-1, grid_size=2, is_seamless=False, temperature=1, top_k="256", supercondition_factor="32"):
     global model
-
-    torch.set_grad_enabled(False)
-    torch.backends.cudnn.enabled = True
-    torch.backends.cudnn.deterministic = False
-    torch.backends.cudnn.benchmark = True
-    torch.backends.cuda.matmul.allow_tf32 = True
-    torch.backends.cuda.matmul.allow_fp16_reduced_precision_reduction = True
 
     with torch.no_grad():
         images = model.generate_images(
@@ -90,9 +84,8 @@ def run_model(prompt, seed=-1, grid_size=2, is_seamless=False, temperature=1, to
     logging.info(f"Seed: {seed}, Grid_Size: {grid_size}, Seamless: {is_seamless}, "
                  f"Temperature: {temperature}, Top_k: {top_k}, supercondition_factor: {supercondition_factor}")
     images = [Image.fromarray((img * 1).astype(np.uint8)).convert('RGB') for img in images.to('cpu').numpy()]
-    # grid_img_path = save_img(images, grid_size, save_path="./outputs")
-    grid_img_path = save_img(images, grid_size, save_path="./examples/")
-    return images, grid_img_path
+    save_img(images, grid_size, save_path="./outputs")
+    return images
 
 
 def gradio_basic_page():
@@ -103,7 +96,7 @@ def gradio_basic_page():
             # gr.Row() 水平排列
             with gr.Row():
                 with gr.Column():
-                    prompt_box = gr.Textbox(label="提示词", lines=1)
+                    prompt_box = gr.Textbox(label="提示词  - （请勿超过64个词）", lines=1)
                     go_button = gr.Button("开始绘画", elem_id="go_button")
                     output_img = gr.Gallery(interactive=False, show_label=False).style(grid=[5], height="640px")
         # style
@@ -119,62 +112,80 @@ def gradio_basic_page():
 def gradio_advanced_app():
     with gr.Blocks(title="109美术高中AI与美术融合课", css="utils/gradio_css.css") as advanced_app:
         with gr.Column():
-            gr.Markdown("## 109美术高中AI与美术融合课 - min(DALL·E)")
+            gr.Markdown("## 109美术高中AI与美术融合课")
+            gr.Markdown("---")
             with gr.Row():
                 with gr.Column():
-                    prompt_box = gr.Textbox(label="提示词", lines=1)
-                    go_button = gr.Button("开始绘画", elem_id="go_button").style(full_width="True")
-                    output_gallery = gr.Gallery(interactive=False, show_label=False, elem_id="output_gallery")
-                with gr.Column():
-                    gr.Markdown("### Setting")
-                    seed_box = gr.Number(value=-1, label="Seed",
-                                         interactive=False, precision=0)
-                    with gr.Row():
-                        grid_size_slider = gr.Slider(value=2, minimum=1, maximum=5, step=1, label="Grid Size")
-                        random_seed_checkbox = gr.Checkbox(value=True, label="Random Seed")
-                        seamless_checkbox = gr.Checkbox(value=False, label="Seamless")
-                    gr.Markdown("#### Advanced")
-                    with gr.Row():
-                        temperature_slider = gr.Slider(value=1, minimum=1, maximum=7, step=0.1, label="Temperature")
-                        top_k_dropdown = gr.Dropdown(label="Top-k", value="256",
-                                                     choices=[str(2 ** i) for i in range(15)], interactive=True)
-                        supercondition_dropdown = gr.Dropdown(label="Super Condition", value="16",
-                                                              choices=[str(2 ** i) for i in range(2, 7)],
-                                                              interactive=True)
-                    gr.Markdown(
-                        """
-                        ####
-                        - **Input Text**: For long prompts, only the first 64 text tokens will be used to generate the image.
-                        - **Seed**: Use a positive seed for reproducible results.
-                        - **Random Seed**: If random seed, seed will set to -1
-                        - **Grid Size**: Size of the image grid. 3x3 takes about 15 seconds.
-                        - **Seamless**: Tile images in image token space instead of pixel space.
-                        - **Temperature**: High temperature increases the probability of sampling low scoring image tokens.
-                        - **Top-k**: Each image token is sampled from the top-k scoring tokens.
-                        - **Super Condition**: Higher values can result in better agreement with the text.
-                        """
-                    )
+                    with gr.Group():
+                        gr.Markdown("#### 提示词 - (请勿超过64个词)")
+                        prompt_box = gr.Textbox(label="", lines=1, show_label=False)
+                        go_button = gr.Button("开始绘画", elem_id="go_button").style(full_width="True")
+                    gr.Markdown("[翻译器](https://www.deepl.com/translator) [提示词撰写参考文档]()")
 
-            gr.Examples(examples=[
-                ["cat, sticker, illustration, japanese style"],
-                ["cyberpunk city"],
-                ["A magnificent picture never seen before"],
-                ["what it sees as very very beautiful"],
-                ["a new creature"],
-                ["What does the legendary phoenix  look like"],
-                ["Pug hedgehog hybrid"],
-                ["photo realistic, 4K, ultra high definition, cinematic, sea dragon horse"],
-                ["city of coca cola oil painting"],
-                ["dream come true"],
-                ["AI robot teacher and students kid in classroom "],
-                ["wasteland, space station, cyberpunk, giant ship, photo realistic, 8K, ultra high definition, cinematic"],
-                ["sunset, sunrays showing through the woods in front, clear night sky, stars visible, mountain in the back, lake in front reflecting the night sky and mountain, photo realistic, 8K, ultra high definition, cinematic"],
-            ], inputs=[prompt_box], examples_per_page=40)
+                    with gr.Group():
+                        gr.Markdown("### 高级设置")
+                        seed_box = gr.Number(value=-1, label="Seed",
+                                             interactive=False, precision=0, visible=False)
+                        with gr.Row():
+                            grid_size_slider = gr.Slider(value=2, minimum=1, maximum=5, step=1, label="Grid Size",
+                                                         visible=False, interactive=False)
+                            random_seed_checkbox = gr.Checkbox(value=True, label="Random Seed", visible=False)
+                        with gr.Row():
+                            temperature_slider = gr.Slider(value=1, minimum=1, maximum=7, step=0.1, label="Temperature")
+                            top_k_dropdown = gr.Dropdown(label="Top-k", value="256",
+                                                         choices=[str(2 ** i) for i in range(15)], interactive=True)
+                            supercondition_dropdown = gr.Dropdown(label="Super Condition", value="16",
+                                                                  choices=[str(2 ** i) for i in range(2, 7)],
+                                                                  interactive=True)
+                            seamless_checkbox = gr.Checkbox(value=False, label="Seamless")
+                        gr.Markdown(
+                            """
+                            ####
+                            - **Seamless**: Tile images in image token space instead of pixel space.
+                            - **Temperature**: High temperature increases the probability of sampling low scoring image tokens.
+                            - **Top-k**: Each image token is sampled from the top-k scoring tokens.
+                            - **Super Condition**: Higher values can result in better agreement with the text.
+                            
+                            """
+                        )
+                    gr.Examples(examples=[
+                        ["cat, sticker, illustration, japanese style"],
+                        ["cyberpunk city"],
+                        ["A magnificent picture never seen before"],
+                        ["what it sees as very very beautiful"],
+                        ["a new creature"],
+                        ["What does the legendary phoenix  look like"],
+                        ["Pug hedgehog hybrid"],
+                        ["photo realistic, 4K, ultra high definition, cinematic, sea dragon horse"],
+                        ["city of coca cola oil painting"],
+                        ["dream come true"],
+                        ["Castle in the Sky"],
+                        ["AI robot teacher and students kid in classroom "],
+                        ["wasteland, space station, cyberpunk, giant ship, photo realistic, 8K, ultra high definition, cinematic"],
+                        ["sunset, sunrays showing through the woods in front, clear night sky, stars visible, mountain in the back, lake in front reflecting the night sky and mountain, photo realistic, 8K, ultra high definition, cinematic"],
+                        ["Castle in the sky surrounded by beautiful clouds，photo realistic, 4K, ultra high definition, cinematic"],
+                        ["photo realistic, 4K, ultra high definition, cinematic, Castle in the Sky,illustration,chinese style"],
+                        ["Castle in the Sky,illustration,chinese style"],
+                        ["space soldiers, coming to earth, stars, space ships, purple space"]
+                    ], inputs=[prompt_box], examples_per_page=40)
+                with gr.Column():
+                    output_gallery = gr.Gallery(label="Output IMG", interactive=False, show_label=False, elem_id="output_gallery")
+
+            gr.Markdown(
+                '''
+                
+                
+                #### 
+                ---
+                - Model: [kuprel/min(DALL·E)](https://github.com/kuprel/min-dalle)
+                - UI Design: [刘学恺](https://github.com/LianQi-Kevin)
+                '''
+            )
 
         # style
         go_button.style(full_width="True", rounded=True)
         seed_box.style(rounded=True)
-        output_gallery.style(grid=[3], height="auto")
+        output_gallery.style(grid=[2], height="auto")
 
         # action
         random_seed_checkbox.change(update_random_seed, inputs=[random_seed_checkbox], outputs=[seed_box])
@@ -191,7 +202,14 @@ def gradio_advanced_app():
 
 
 if __name__ == '__main__':
-    log_set()
+    # log_set()
+
+    torch.set_grad_enabled(False)
+    torch.backends.cudnn.enabled = True
+    torch.backends.cudnn.deterministic = False
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cuda.matmul.allow_fp16_reduced_precision_reduction = True
 
     # load model
     logging.info("Start load min-dalle model")
