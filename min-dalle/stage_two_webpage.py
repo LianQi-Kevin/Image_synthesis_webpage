@@ -49,6 +49,7 @@ def post_process(images):
 def stage_1(prompt, temperature=1, top_k="256", supercondition_factor="32", is_seamless=False):
     seed_list = [np.random.randint(0, 2 ** 32 - 1) for _ in range(4)]
     project_UUID = str(uuid4())
+    logging.info(f"Project UUID: {project_UUID}")
     images = []
     with torch.no_grad():
         for seed in seed_list:
@@ -75,10 +76,15 @@ def stage_1(prompt, temperature=1, top_k="256", supercondition_factor="32", is_s
                 "is_verbose": False,
                 "seed_img": []}
 
-    for seed, img in zip(seed_list, images):
-        img.save(os.path.join(stage_1_save_path, f"{seed}.png"))
-        msg_dict["seed_img"].append({"seed": seed, "img_path": os.path.join(stage_1_save_path, f"{seed}.png")})
+    logging.info(f"Prompt: {prompt}")
+    logging.info(f"Grid_Size: {2}, Seamless: {is_seamless}, "
+                 f"Temperature: {temperature}, Top_k: {top_k}, supercondition_factor: {supercondition_factor}")
 
+    for seed, img in zip(seed_list, images):
+        img_path = os.path.join(stage_1_save_path, f"{seed}.png")
+        img.save(img_path)
+        msg_dict["seed_img"].append({"seed": seed, "img_path": img_path})
+        logging.info(f"seed: {seed}, img_path: {img_path}")
     with open(os.path.join(stage_1_save_path, "config.json"), "w") as json_f:
         json.dump(msg_dict, fp=json_f, ensure_ascii=False, sort_keys=True, indent=4, separators=(",", ": "))
     return images, seed_list[0], seed_list[1], seed_list[2], seed_list[3], project_UUID, gr.update(visible=True)
@@ -110,9 +116,14 @@ def stage_2(prompt, seed, project_UUID, temperature=1, top_k="128", superconditi
                 "is_verbose": False,
                 "img_path": []}
 
+    logging.info(f"Prompt: {prompt}")
+    logging.info(f"Grid_Size: {2}, seed: {seed}, Seamless: {is_seamless}, "
+                 f"Temperature: {temperature}, Top_k: {top_k}, supercondition_factor: {supercondition_factor}")
+
     basic_i = len(glob(os.path.join(stage_2_save_path, "/*.png")))
     for index, img in enumerate(images):
         img_path = os.path.join(stage_2_save_path, f"{(index + basic_i):05}.png")
+        logging.info(f"save img: {img_path}")
         img.save(img_path)
         msg_dict["img_path"].append(img_path)
     with open(os.path.join(stage_2_save_path, "config.json"), "w") as json_f:
@@ -239,13 +250,13 @@ def gradio_2stage_app():
 
 
 if __name__ == '__main__':
-    # log_set()
+    log_set()
 
     # load model
-    # logging.info("Start load min-dalle model")
+    logging.info("Start load min-dalle model")
     model = MinDalle(models_root='./models', dtype=torch.float32,
                      device='cuda', is_mega=True, is_reusable=True)
-    # logging.info("Successful load min-dalle models")
+    logging.info("Successful load min-dalle models")
 
     torch.set_grad_enabled(False)
     torch.backends.cudnn.enabled = True
