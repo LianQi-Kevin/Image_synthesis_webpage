@@ -1,0 +1,8 @@
+#go_button {
+    height: 40px;
+    max-height: 40px;
+}
+#control_button {
+    width: 150px;
+    max-width: 150px;
+}
