@@ -9,19 +9,24 @@ unzip main.zip && rm main.zip && mv stable-diffusion-main stable-diffusion && cd
 conda env create -f environment.yaml
 conda activate ldm
 pip install gradio
-conda install -c conda-forge diffusers
 ```
+
+
+> `{stable-diffusion}/environment.yaml` need to change the line 20, pytorch-lightning version to 1.5.0
 
 #### Step - 2. link output_dir
 ```shell
-mkdir -p /root/autodl-tmp/outputs_stable_diffusion
+mkdir -p /root/autodl-tmp/outputs
 mkdir -p /root/autodl-tmp/models
-ln -s /root/Image_synthesis_webpage/stable_diffusion/outputs /root/autodl-tmp/outputs_stable_diffusion
-ln -s /root/Image_synthesis_webpage/stable_diffusion/models /root/autodl-tmp/models
+ln -s /root/Image_synthesis_webpage/stable-diffusion/outputs /root/autodl-tmp/outputs
+ln -s /root/Image_synthesis_webpage/stable-diffusion/models /root/autodl-tmp/models
+cd /root/Image_synthesis_webpage/stable-diffusion
 ```
 
-[comment]: <> (#### Step - 3. Download model)
+#### Step - 3. Download model
 
-[comment]: <> (```shell)
+> Visit [CompVis/stable-diffusion-v-1-4-original](https://huggingface.co/CompVis/stable-diffusion-v-1-4-original) to download model
+> 
+> Save model to /root/Image_synthesis_webpage/stable-diffusion/models/
 
-[comment]: <> (···)
+

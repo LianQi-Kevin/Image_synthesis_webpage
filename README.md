@@ -31,6 +31,5 @@ environment build note: [dalle-mini_env_build.md](dalle-mini/dalle-mini_env_buil
 
 ---
 
-#### 2022-08-22 note
-1. stable-diffusion's model needs approval, no reply has been received
-2. DALL·E-mini environment has not been deployed successfully, and the notes are still wrong
+#### 2022-08-26 note
+1. DALL·E-mini environment has not been deployed successfully, and the notes are still wrong
