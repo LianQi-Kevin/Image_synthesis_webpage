@@ -1,137 +1,232 @@
+import json
+import logging
+import os
+import time
+from uuid import uuid4
+
 import gradio as gr
 import numpy as np
+from PIL import Image
+
+from utils.prompt_note import prompt_note, examples, parameter_description
 from utils.text2img import make_args, text2img
-import os
 
 
-def gr_interface(prompt, seed=np.random.randint(1, 100000), img_H=256, img_W=256,
-                 n_samples=4, n_iter=1, ddim_steps=50, ddim_eta=0.0, n_rows=2, scale=5.0):
-    global callback
+def log_set():
+    logger = logging.getLogger()  # 不加名称设置root logger
+    logger.setLevel(logging.DEBUG)
+    # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s: - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+
+    # 使用FileHandler输出到文件
+    fh = logging.FileHandler('log.log')
+    fh.setLevel(logging.INFO)
+    fh.setFormatter(formatter)
+
+    # 使用StreamHandler输出到屏幕
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    ch.setFormatter(formatter)
+
+    # 添加两个Handler
+    logger.addHandler(ch)
+    logger.addHandler(fh)
+
+
+def concat_img(images, grid_size=2, img_H=512, img_W=512):
+    grid_img = Image.new("RGB", (grid_size * img_W, grid_size * img_H))
+    for row in range(grid_size):
+        for col in range(grid_size):
+            grid_img.paste(images[grid_size * row + col], (0 + img_W * col, 0 + img_H * row))
+    return grid_img
+
+
+def save_img(images, prompt, seed, ddim_steps=50, scale=7.5, img_H=512, img_W=512,
+             n_samples=4, n_iter=1, ddim_eta=0.0, output_path="./outputs"):
+    """
+        输出文件结构
+        outputs
+          └─ "{}_{}_{}".format(global_index, time.strftime("%y-%m-%d_%H-%M-%S"), uuid4()
+              ├─ grid.png
+              ├─ config.json
+              └─ samples
+                     ├─ 00001.png
+                     ├─ 00002.png
+                     ├─ 00003.png
+                     └─ 00004.png
+
+        """
+    global global_index
+    project_uuid = "{}_{}_{}".format(global_index, time.strftime("%y-%m-%d_%H-%M-%S"), uuid4())
+    global_index += 1
+    logging.info(project_uuid)
+    output_dir = os.path.join(output_path, project_uuid)
+    sample_path = os.path.join(output_dir, "samples")
+    os.makedirs(sample_path, exist_ok=True)
+    config_dict = {
+        "prompts": prompt,
+        "seed": seed,
+        "ddim_steps": ddim_steps,
+        "ddim_eta": ddim_eta,
+        "scale": scale,
+        "img_H": img_H,
+        "img_W": img_W,
+        "n_samples": n_samples,
+        "n_iter": n_iter,
+        "grid_path": os.path.join(output_dir, "grid.png"),
+        "samples_path": list()
+    }
+
+    # grid image
+    concat_img(images, 2, 512, 512).save(config_dict["grid_path"])
+    logging.info("Successful save {}".format(config_dict["grid_path"]))
+
+    # samples image
+    for index, img in enumerate(images):
+        single_img_path = os.path.join(sample_path, f"{index:05}.png")
+        img.save(single_img_path)
+        config_dict["samples_path"].append(single_img_path)
+        logging.info("Successful save {}".format(single_img_path))
+
+    # config json
+    with open(os.path.join(output_dir, "config.json"), "w") as json_f:
+        json.dump(config_dict, fp=json_f, ensure_ascii=False, sort_keys=True, indent=4, separators=(",", ": "))
+
+    return output_dir
+
+
+def gr_interface(prompt, seed=np.random.randint(1, 2147483646), ddim_steps=50, scale=7.5, img_H=512, img_W=512,
+                 random_seed=False, n_samples=4, n_iter=1, ddim_eta=0.0):
     global txt2img
-    grid_save_path = os.path.join(txt2img.output_dir, f'grid-{txt2img.grid_count:04}.png')
-    all_samples = txt2img.synthesis(prompt, seed=seed, n_samples=int(n_samples), n_iter=int(n_iter),
-                                    img_H=img_H, img_W=img_W, ddim_steps=int(ddim_steps), scale=scale, ddim_eta=ddim_eta)
-    return txt2img.save_img(all_samples, single_save=True, grid_save=True, n_rows=n_rows)[0], str(grid_save_path)
 
-
-def gr_basic_page():
-    with gr.Blocks(title="109美术高中AI与美术融合课") as basic_app:
-        with gr.Column():
-            with gr.Row():
-                prompt = gr.Textbox(label="提示词", lines=1, max_lines=3)
-                go_button = gr.Button("开始绘画")
-                go_button.style(rounded=True)
-            seed_box = gr.Number(interactive=True, label="seed", value=np.random.randint(1, 10000000))
-            seed_box.style(rounded=True)
-        go_button.click(gr_interface, inputs=[prompt, seed_box], outputs=[gr.Image()])
-    basic_app.launch(server_port=6006, share=False, quiet=False, enable_queue=True, show_error=True)
-
-
-def control_panel_interactive(advanced_page):
-    global CP_interactive
-    if CP_interactive:
-        CP_interactive = False
-        return gr.update(visible=False)
+    if random_seed:
+        seed = np.random.randint(1, 2147483646)
     else:
-        CP_interactive = True
-        return gr.update(visible=True)
+        seed = int(seed)
+
+    logging.info(f"Prompt: {prompt}")
+    logging.info(f"Seed: {seed}, ddim_steps={ddim_steps}, scale={scale}, img_H={img_H}, img_W={img_W}")
+    logging.info(f"n_samples={n_samples}, n_iter={n_iter}, ddim_eta={ddim_eta}")
+
+    all_samples = txt2img.synthesis(prompt, seed=seed, n_samples=int(n_samples), n_iter=int(n_iter),
+                                    img_H=img_H, img_W=img_W, ddim_steps=int(ddim_steps), scale=scale,
+                                    ddim_eta=ddim_eta)
+    images = txt2img.postprocess(all_samples, single=True)
+
+    save_img(images, prompt, seed, ddim_steps, scale, img_H, img_W, n_samples, n_iter, ddim_eta, output_path="outputs/")
+    return images, int(seed)
+
+
+def gr_interface_un_save(prompt, ddim_steps=50, scale=7.5, seed=1024, img_H=512, img_W=512,
+                         n_samples=4, n_iter=1, ddim_eta=0.0):
+    global txt2img
+
+    logging.info(f"Prompt: {prompt}")
+    logging.info(f"Seed: {seed}, ddim_steps={ddim_steps}, scale={scale}, img_H={img_H}, img_W={img_W}")
+    logging.info(f"n_samples={n_samples}, n_iter={n_iter}, ddim_eta={ddim_eta}")
+
+    all_samples = txt2img.synthesis(prompt, seed=seed, n_samples=int(n_samples), n_iter=int(n_iter),
+                                    img_H=img_H, img_W=img_W, ddim_steps=int(ddim_steps), scale=scale,
+                                    ddim_eta=ddim_eta)
+    images = txt2img.postprocess(all_samples, single=True)
+
+    return images, int(seed)
+
+
+def update_interactive(advanced_page):
+    if advanced_page:
+        return gr.update(interactive=False)
+    else:
+        return gr.update(interactive=True)
 
 
 def gr_advanced_page():
-    global CP_interactive
-    global callback
+    global adv_visible
 
     with gr.Blocks(title="109美术高中AI与美术融合课", css="utils/text2img.css") as advanced_app:
-        # widgets
+        # gr.Column()   垂直      | gr.ROW()  水平
         with gr.Column():
-            gr.Markdown("## 109美术高中AI与美术融合课")
+            gr.Markdown("""## 109美术高中AI与美术融合课
+            - - -
+            """)
             with gr.Row():
                 with gr.Column():
-                    prompt_box = gr.Textbox(label="提示词", lines=1)
-                    with gr.Row():
-                        go_button = gr.Button("开始绘画", elem_id="go_button")
-                        # config_button = gr.Button("控制面板", elem_id="control_button")
-                    output_img = gr.Image(interactive=False)
-                    grid_save_path = gr.Textbox(interactive=False, visible=True, label="grid_img_path")
-                # with gr.Column(visible=CP_interactive) as advanced_page:
-                with gr.Column(visible=True) as advanced_page:
-                    seed_box = gr.Number(interactive=True, label="seed", value=np.random.randint(1, 10000000))
-                    with gr.Row():
-                        ddim_step_slider = gr.Slider(minimum=10, maximum=120, step=1, value=50, label="ddim_step", interactive=True)
-                        ddim_sta_slider = gr.Slider(minimum=0.0, maximum=1.0, step=0.1, value=0.0, label="ddim_eta", interactive=True)
-                    with gr.Row():
-                        n_sample_slider = gr.Slider(minimum=1, maximum=5, step=1, value=4, label="n_sample", interactive=True)
-                        n_iter_slider = gr.Slider(minimum=1, maximum=5, step=1, value=1, label="n_iter", interactive=True)
-                    with gr.Row():
-                        img_H_slider = gr.Slider(minimum=256, maximum=512, step=64, value=512, label="img_height", interactive=True)
-                        img_W_slider = gr.Slider(minimum=256, maximum=512, step=64, value=512, label="img_width", interactive=True)
-                    gr.Markdown(
-                        value="""
-                        ####
-                        - **seed**: the seed (for reproducible sampling).
-                        - **ddim_step**: number of ddim sampling steps.
-                        - **ddim_eta**: ddim eta (eta=0.0 corresponds to deterministic sampling).
-                        - **n_sample**: how many samples to produce for each given prompt. A.k.a batch size.
-                        - **n_iter**: sample this often.
-                        - **img_height**: image height, in pixel space.
-                        - **img_width**: image width, in pixel space.
+                    with gr.Column():
+                        with gr.Group():
+                            gr.Markdown("#### 提示词 - (请勿超过64个词)")
+                            prompt_box = gr.Textbox(label="prompts", lines=1, show_label=False)
+                            generate_button = gr.Button("开始绘画", elem_id="go_button").style(full_width="True")
+                        gr.Markdown("""
+                        [翻译器](https://www.deepl.com/translator)
+                        - - -
                         """)
-            gr.Examples(examples=[
-                ["cat, sticker, illustration, japanese style"],
-                ["cyberpunk city"],
-                ["A magnificent picture never seen before"],
-                ["what it sees as very very beautiful"],
-                ["a new creature"],
-                ["What does the legendary phoenix  look like"],
-                ["Pug hedgehog hybrid"],
-                ["photo realistic, 4K, ultra high definition, cinematic, sea dragon horse"],
-                ["city of coca cola oil painting"],
-                ["dream come true"],
-                ["Castle in the Sky"],
-                ["AI robot teacher and students kid in classroom "],
-                [
-                    "wasteland, space station, cyberpunk, giant ship, photo realistic, 8K, ultra high definition, cinematic"],
-                [
-                    "sunset, sunrays showing through the woods in front, clear night sky, stars visible, mountain in the back, lake in front reflecting the night sky and mountain, photo realistic, 8K, ultra high definition, cinematic"],
-                [
-                    "Castle in the sky surrounded by beautiful clouds，photo realistic, 4K, ultra high definition, cinematic"],
-                ["photo realistic, 4K, ultra high definition, cinematic, Castle in the Sky,illustration,chinese style"],
-                ["Castle in the Sky,illustration,chinese style"],
-                ["space soldiers, coming to earth, stars, space ships, purple space"]
-            ], inputs=[prompt_box], examples_per_page=40)
+
+                    with gr.Column():
+                        gr.Markdown("### 高级设置")
+                        with gr.Group():
+                            with gr.Row():
+                                seed_box = gr.Number(label="Seed", value=np.random.randint(1, 2147483646), interactive=False,
+                                                     elem_id="seed_box")
+                                random_seed_checkbox = gr.Checkbox(label="Random Seed", value=True, interactive=True,
+                                                                   elem_id="random_seed")
+                            with gr.Row():
+                                ddim_step_slider = gr.Slider(minimum=10, maximum=50, step=1, value=10, label="Steps",
+                                                             interactive=True)
+                                scale_slider = gr.Slider(minimum=0, maximum=50, step=0.1, value=7.5,
+                                                         label="Guidance Scale", interactive=True)
+                                img_H_slider = gr.Slider(minimum=384, maximum=512, step=64, value=512,
+                                                         label="Img Height", interactive=True)
+                                img_W_slider = gr.Slider(minimum=384, maximum=512, step=64, value=512,
+                                                         label="Img Width", interactive=True)
+                                # ddim_eta_slider = gr.Slider(minimum=0.0, maximum=1.0, step=0.1, value=0.0, label="ddim_eta", interactive=True)
+                                # n_sample_slider = gr.Slider(minimum=1, maximum=5, step=1, value=4, label="n_sample", interactive=True)
+                                # n_iter_slider = gr.Slider(minimum=1, maximum=5, step=1, value=1, label="n_iter", interactive=True)
+                            gr.Markdown(value=parameter_description)
+
+                with gr.Column():
+                    output_gallery = gr.Gallery(interactive=False).style(grid=[2], height="auto")
+            ex = gr.Examples(examples=examples,
+                             inputs=[prompt_box, ddim_step_slider, scale_slider, seed_box],
+                             outputs=[output_gallery, seed_box],
+                             fn=gr_interface_un_save,
+                             examples_per_page=40,
+                             cache_examples=True)
+            ex.dataset.headers = [""]
+
+            gr.Markdown(prompt_note)
 
         # style
-        go_button.style(rounded=True, full_width="True")
-        seed_box.style(rounded=True)
-
-        # CSV logger
-        callback.setup([prompt_box, seed_box, img_H_slider, img_W_slider,
-                        ddim_step_slider, ddim_sta_slider, n_sample_slider, n_iter_slider, grid_save_path], "flagged_data_points")
+        prompt_box.style(rounded=(True, True, False, False), container=False)
+        generate_button.style(margin=False, rounded=(False, False, True, True), full_width="True")
 
         # action
-        # config_button.click(control_panel_interactive,
-        #                     inputs=[advanced_page],
-        #                     outputs=[advanced_page])
-        go_button.click(gr_interface,
-                        inputs=[prompt_box, seed_box, img_H_slider, img_W_slider,
-                                n_sample_slider, n_iter_slider, ddim_step_slider, ddim_sta_slider],
-                        outputs=[output_img, grid_save_path])
-        grid_save_path.change(lambda *args: callback.flag(args),
-                              inputs=[prompt_box, seed_box, img_H_slider, img_W_slider,
-                                      # ddim_step_slider, ddim_sta_slider, n_sample_slider, n_iter_slider],
-                                      ddim_step_slider, ddim_sta_slider, n_sample_slider, n_iter_slider, grid_save_path],
-                              outputs=[])
-    advanced_app.launch(server_port=6006, share=False, quiet=False, enable_queue=True, show_error=True)
+        random_seed_checkbox.change(update_interactive,
+                                    inputs=[random_seed_checkbox],
+                                    outputs=[seed_box])
 
+        prompt_box.submit(gr_interface,
+                          inputs=[prompt_box, seed_box, ddim_step_slider, scale_slider, img_H_slider, img_W_slider,
+                                  random_seed_checkbox],
+                          outputs=[output_gallery, seed_box])
+
+        generate_button.click(gr_interface,
+                              inputs=[prompt_box, seed_box, ddim_step_slider, scale_slider, img_H_slider, img_W_slider,
+                                      random_seed_checkbox],
+                              outputs=[output_gallery, seed_box])
+
+    advanced_app.launch(server_port=6006, share=False, quiet=False, show_error=False)
+    advanced_app.queue()
 
 
 if __name__ == '__main__':
     # args
     opt = make_args()
+    log_set()
+    global_index = 0
 
     # ----------
     # 调试用 覆盖args
-    opt.config = "./configs/v1-inference.yaml"
+    opt.config = "./configs/stable-diffusion/v1-inference.yaml"
     opt.ckpt = "./models/stable-diffusion-v1-4-original/sd-v1-4.ckpt"
     opt.out_dir = "outputs/"  # output dir
     # ----------
@@ -141,11 +236,6 @@ if __name__ == '__main__':
 
     # init text2img
     txt2img = text2img(ckpt=opt.ckpt, config=opt.config, output_dir=opt.out_dir)
-
-    # control panel interactive
-    CP_interactive = False
-
-    callback = gr.CSVLogger()
 
     # gr_basic_page()
     gr_advanced_page()

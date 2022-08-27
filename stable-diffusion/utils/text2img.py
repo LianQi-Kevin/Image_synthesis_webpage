@@ -15,6 +15,7 @@ from pytorch_lightning import seed_everything
 from torch import autocast
 from torchvision.utils import make_grid
 from tqdm import tqdm, trange
+import logging
 
 
 class text2img(object):
@@ -47,10 +48,10 @@ class text2img(object):
 
     def _load_model(self, verbose=False):
         config = OmegaConf.load(self.config)
-        print("Loading model from {}".format(self.ckpt))
+        logging.info("Loading model from {}".format(self.ckpt))
         pl_sd = torch.load(self.ckpt, map_location="cpu")
         if "global_step" in pl_sd:
-            print("Global Step: {}".format(pl_sd['global_step']))
+            logging.info("Global Step: {}".format(pl_sd['global_step']))
         sd = pl_sd["state_dict"]
         model = instantiate_from_config(config.model)
         m, u = model.load_state_dict(sd, strict=False)
@@ -62,7 +63,7 @@ class text2img(object):
             print(u)
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         model = model.to(device)
-        print("Successful load {}".format(self.ckpt))
+        logging.info("Successful load {}".format(self.ckpt))
         return model, device
 
     def synthesis(self, prompt, img_H=256, img_W=256, seed=42,

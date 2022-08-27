@@ -10,8 +10,7 @@
 /min-dalle/outputs/
 /min-dalle/test.py
 /stable-diffusion/repositories/
-/stable-diffusion/models/stable-diffusion-v-1-4-original/
-/stable-diffusion/models/stable-diffusion-v1-3-diffusers/
 /stable-diffusion/models/stable-diffusion-v1-3-original/
-/stable-diffusion/models/stable-diffusion-v1-4/
 /stable-diffusion/outputs/
+/stable-diffusion/models/stable-diffusion-v1-4-original/
+/stable-diffusion/log.log
