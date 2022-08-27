@@ -218,6 +218,81 @@ def gr_advanced_page():
     advanced_app.queue()
 
 
+def gr_advanced_vertical_page():
+    global adv_visible
+
+    with gr.Blocks(title="109美术高中AI与美术融合课", css="utils/text2img.css") as advanced_app:
+        # gr.Column()   垂直      | gr.ROW()  水平
+        with gr.Column():
+            gr.Markdown("""## 109美术高中AI与美术融合课
+                - - -
+                """)
+            with gr.Row():
+                with gr.Column():
+                    with gr.Column():
+                        with gr.Group():
+                            gr.Markdown("#### 提示词 - (请勿超过64个词)")
+                            prompt_box = gr.Textbox(label="prompts", lines=1, show_label=False)
+                            generate_button = gr.Button("开始绘画", elem_id="go_button").style(full_width="True")
+                        gr.Markdown("[翻译器](https://www.deepl.com/translator)")
+                    output_gallery = gr.Gallery(interactive=False).style(grid=[2], height="auto")
+
+                with gr.Column():
+                    gr.Markdown("### 高级设置")
+                    with gr.Group():
+                        with gr.Row():
+                            seed_box = gr.Number(label="Seed", value=np.random.randint(1, 2147483646),
+                                                 interactive=False,
+                                                 elem_id="seed_box")
+                            random_seed_checkbox = gr.Checkbox(label="Random Seed", value=True, interactive=True,
+                                                               elem_id="random_seed")
+                        with gr.Row():
+                            ddim_step_slider = gr.Slider(minimum=10, maximum=50, step=1, value=10, label="Steps",
+                                                         interactive=True)
+                            scale_slider = gr.Slider(minimum=0, maximum=50, step=0.1, value=7.5,
+                                                     label="Guidance Scale", interactive=True)
+                            img_H_slider = gr.Slider(minimum=384, maximum=512, step=64, value=512,
+                                                     label="Img Height", interactive=True)
+                            img_W_slider = gr.Slider(minimum=384, maximum=512, step=64, value=512,
+                                                     label="Img Width", interactive=True)
+                            # ddim_eta_slider = gr.Slider(minimum=0.0, maximum=1.0, step=0.1, value=0.0, label="ddim_eta", interactive=True)
+                            # n_sample_slider = gr.Slider(minimum=1, maximum=5, step=1, value=4, label="n_sample", interactive=True)
+                            # n_iter_slider = gr.Slider(minimum=1, maximum=5, step=1, value=1, label="n_iter", interactive=True)
+                        gr.Markdown(value=parameter_description)
+
+                    ex = gr.Examples(examples=examples,
+                                     inputs=[prompt_box, ddim_step_slider, scale_slider, seed_box],
+                                     outputs=[output_gallery, seed_box],
+                                     fn=gr_interface_un_save,
+                                     examples_per_page=40,
+                                     cache_examples=True)
+                    ex.dataset.headers = [""]
+
+            gr.Markdown(prompt_note)
+
+        # style
+        prompt_box.style(rounded=(True, True, False, False), container=False)
+        generate_button.style(margin=False, rounded=(False, False, True, True), full_width="True")
+
+        # action
+        random_seed_checkbox.change(update_interactive,
+                                    inputs=[random_seed_checkbox],
+                                    outputs=[seed_box])
+
+        prompt_box.submit(gr_interface,
+                          inputs=[prompt_box, seed_box, ddim_step_slider, scale_slider, img_H_slider, img_W_slider,
+                                  random_seed_checkbox],
+                          outputs=[output_gallery, seed_box])
+
+        generate_button.click(gr_interface,
+                              inputs=[prompt_box, seed_box, ddim_step_slider, scale_slider, img_H_slider, img_W_slider,
+                                      random_seed_checkbox],
+                              outputs=[output_gallery, seed_box])
+
+    advanced_app.launch(server_port=6006, share=False, quiet=False, show_error=False, enable_queue=True)
+    # advanced_app.queue(concurrency_count=1, status_update_rate="auto", )
+
+
 if __name__ == '__main__':
     # args
     opt = make_args()
@@ -238,4 +313,5 @@ if __name__ == '__main__':
     txt2img = text2img(ckpt=opt.ckpt, config=opt.config, output_dir=opt.out_dir)
 
     # gr_basic_page()
-    gr_advanced_page()
+    # gr_advanced_page()
+    gr_advanced_vertical_page()

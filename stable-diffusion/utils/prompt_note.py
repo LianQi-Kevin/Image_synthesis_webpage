@@ -99,30 +99,34 @@
 
 """
 
+ex_steps = 10
+ex_scale = 7.5
+ex_seed = 1024
+
 examples = [
-    ["cat, sticker, illustration, japanese style", 45, 7.0, 1024, ],
-    ["cyberpunk city", 45, 7.0, 1024, ],
-    ["A magnificent picture never seen before", 45, 7.0, 1024, ],
-    ["what it sees as very very beautiful", 45, 7.0, 1024, ],
-    ["a new creature", 45, 7.0, 1024, ],
-    ["What does the legendary phoenix  look like", 45, 7.0, 1024, ],
-    ["Pug hedgehog hybrid", 45, 7.0, 1024, ],
-    ["photo realistic, 4K, ultra high definition, cinematic, sea dragon horse", 45, 7.0, 1024, ],
-    ["city of coca cola oil painting", 45, 7.0, 1024, ],
-    ["dream come true", 45, 7.0, 1024, ],
-    ["Castle in the Sky", 45, 7.0, 1024, ],
-    ["AI robot teacher and students kid in classroom ", 45, 7.0, 1024, ],
-    ["wasteland, space station, cyberpunk, giant ship, photo realistic, 8K, ultra high definition, cinematic", 45, 7.0, 1024, ],
+    ["cat, sticker, illustration, japanese style", ex_steps, ex_scale, ex_seed, ],
+    ["cyberpunk city", ex_steps, ex_scale, ex_seed, ],
+    ["A magnificent picture never seen before", ex_steps, ex_scale, ex_seed, ],
+    ["what it sees as very very beautiful", ex_steps, ex_scale, ex_seed, ],
+    ["a new creature", ex_steps, ex_scale, ex_seed, ],
+    ["What does the legendary phoenix  look like", ex_steps, ex_scale, ex_seed, ],
+    ["Pug hedgehog hybrid", ex_steps, ex_scale, ex_seed, ],
+    ["photo realistic, 4K, ultra high definition, cinematic, sea dragon horse", ex_steps, ex_scale, ex_seed, ],
+    ["city of coca cola oil painting", ex_steps, ex_scale, ex_seed, ],
+    ["dream come true", ex_steps, ex_scale, ex_seed, ],
+    ["Castle in the Sky", ex_steps, ex_scale, ex_seed, ],
+    ["AI robot teacher and students kid in classroom ", ex_steps, ex_scale, ex_seed, ],
+    ["wasteland, space station, cyberpunk, giant ship, photo realistic, 8K, ultra high definition, cinematic", ex_steps, ex_scale, ex_seed, ],
     ["sunset, sunrays showing through the woods in front, clear night sky, stars visible, mountain in the back, lake in front reflecting the night sky and mountain, photo realistic, 8K, ultra high definition, cinematic", 45, 7.0, 1024, ],
-    ["Castle in the sky surrounded by beautiful clouds，photo realistic, 4K, ultra high definition, cinematic", 45, 7.0, 1024, ],
-    ["photo realistic, 4K, ultra high definition, cinematic, Castle in the Sky,illustration,chinese style", 45, 7.0, 1024, ],
-    ["Castle in the Sky,illustration,chinese style", 45, 7.0, 1024, ],
-    ["space soldiers, coming to earth, stars, space ships, purple space", 45, 7.0, 1024, ],
-    ['A high tech solarpunk utopia in the Amazon rainforest', 45, 7.5, 1024, ],
-    ['A pikachu fine dining with a view to the Eiffel Tower', 45, 7.5, 1024, ],
-    ['A mecha robot in a favela in expressionist style', 45, 7.5, 1024, ],
-    ['an insect robot preparing a delicious meal', 45, 7.5, 1024, ],
-    ["A small cabin on top of a snowy mountain in the style of Disney, artstation", 45, 7.5, 1024, ]
+    ["Castle in the sky surrounded by beautiful clouds，photo realistic, 4K, ultra high definition, cinematic", ex_steps, ex_scale, ex_seed, ],
+    ["photo realistic, 4K, ultra high definition, cinematic, Castle in the Sky,illustration,chinese style", ex_steps, ex_scale, ex_seed, ],
+    ["Castle in the Sky,illustration,chinese style", ex_steps, ex_scale, ex_seed, ],
+    ["space soldiers, coming to earth, stars, space ships, purple space", ex_steps, ex_scale, ex_seed, ],
+    ['A high tech solarpunk utopia in the Amazon rainforest', ex_steps, ex_scale, ex_seed, ],
+    ['A pikachu fine dining with a view to the Eiffel Tower', ex_steps, ex_scale, ex_seed, ],
+    ['A mecha robot in a favela in expressionist style', ex_steps, ex_scale, ex_seed, ],
+    ['an insect robot preparing a delicious meal', ex_steps, ex_scale, ex_seed, ],
+    ["A small cabin on top of a snowy mountain in the style of Disney, artstation", ex_steps, ex_scale, ex_seed, ]
 ]
 
 parameter_description = """
