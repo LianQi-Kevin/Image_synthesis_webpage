@@ -15,7 +15,7 @@ conda activate min_dalle
 ### 2. install packages
 ```shell
 conda install pytorch==1.11.0 torchvision==0.12.0 torchaudio==0.11.0 cudatoolkit=11.3 -c pytorch
-pip install min-dalle numpy==1.23.0 pillow==9.2.0 requests==2.28.1 gradio
+pip install min-dalle numpy==1.23.0 pillow==9.2.0 requests==2.28.1 gradio==3.1.6
 ```
 
 ### 3. clone

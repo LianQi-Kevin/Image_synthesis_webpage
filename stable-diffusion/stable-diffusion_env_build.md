@@ -8,7 +8,7 @@ wget https://github.com/CompVis/stable-diffusion/archive/refs/heads/main.zip
 unzip main.zip && rm main.zip && mv stable-diffusion-main stable-diffusion && cd stable-diffusion
 conda env create -f environment.yaml
 conda activate ldm
-pip install gradio
+pip install gradio==3.1.6
 ```
 
 
