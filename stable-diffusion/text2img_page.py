@@ -8,6 +8,7 @@ import gradio as gr
 import numpy as np
 from PIL import Image
 
+from utils.pron_filter import blacklist_filter as ProfanityFilter
 from utils.prompt_note import prompt_note, examples, parameter_description
 from utils.text2img import make_args, text2img
 
@@ -95,9 +96,20 @@ def save_img(images, prompt, seed, ddim_steps=50, scale=7.5, img_H=512, img_W=51
     return output_dir
 
 
+def pron_filter(blacklist_path="utils/pron_blacklist.txt"):
+    assert os.path.exists(blacklist_path), "{} not found".format(blacklist_path)
+    # read blacklist
+    profanity_filter = ProfanityFilter()
+    profanity_filter.add_from_file("utils/pron_blacklist.txt")
+    # print(profanity_filter.blacklist)
+    # pass
+    # print()
+    return profanity_filter
+
+
 def gr_interface(prompt, seed=np.random.randint(1, 2147483646), ddim_steps=50, scale=7.5, img_H=512, img_W=512,
                  random_seed=False, n_samples=4, n_iter=1, ddim_eta=0.0):
-    global txt2img
+    global txt2img, profanity_filter, draw_warning_img
 
     if random_seed:
         seed = np.random.randint(1, 2147483646)
@@ -107,14 +119,20 @@ def gr_interface(prompt, seed=np.random.randint(1, 2147483646), ddim_steps=50, s
     logging.info(f"Prompt: {prompt}")
     logging.info(f"Seed: {seed}, ddim_steps={ddim_steps}, scale={scale}, img_H={img_H}, img_W={img_W}")
     logging.info(f"n_samples={n_samples}, n_iter={n_iter}, ddim_eta={ddim_eta}")
-
-    all_samples = txt2img.synthesis(prompt, seed=seed, n_samples=int(n_samples), n_iter=int(n_iter),
-                                    img_H=img_H, img_W=img_W, ddim_steps=int(ddim_steps), scale=scale,
-                                    ddim_eta=ddim_eta)
-    images = txt2img.postprocess(all_samples, single=True)
-
-    save_img(images, prompt, seed, ddim_steps, scale, img_H, img_W, n_samples, n_iter, ddim_eta, output_path="outputs/")
-    return images, int(seed)
+    print(profanity_filter.is_profane(prompt))
+    # check pron_blacklist
+    if profanity_filter.is_profane(prompt):
+        logging.warning(f"Found pron word in {prompt}")
+        print(profanity_filter.censor(prompt))
+        return [draw_warning_img, draw_warning_img, draw_warning_img, draw_warning_img], int(seed)
+    else:
+        all_samples = txt2img.synthesis(prompt, seed=seed, n_samples=int(n_samples), n_iter=int(n_iter),
+                                        img_H=img_H, img_W=img_W, ddim_steps=int(ddim_steps), scale=scale,
+                                        ddim_eta=ddim_eta)
+        images = txt2img.postprocess(all_samples, single=True)
+        output_path = "/root/Image_synthesis_webpage/stable-diffusion/outputs/"
+        save_img(images, prompt, seed, ddim_steps, scale, img_H, img_W, n_samples, n_iter, ddim_eta, output_path=output_path)
+        return images, int(seed)
 
 
 def gr_interface_un_save(prompt, ddim_steps=50, scale=7.5, seed=1024, img_H=512, img_W=512,
@@ -157,7 +175,7 @@ def gr_advanced_page():
                             prompt_box = gr.Textbox(label="prompts", lines=1, show_label=False)
                             generate_button = gr.Button("开始绘画", elem_id="go_button").style(full_width="True")
                         gr.Markdown("""
-                        [翻译器](https://www.deepl.com/translator)
+                        [翻译器](https://www.deepl.com/translator)   [探索提示词](https://openart.ai/)
                         - - -
                         """)
 
@@ -171,7 +189,7 @@ def gr_advanced_page():
                                                                    elem_id="random_seed")
                             with gr.Row():
                                 ddim_step_slider = gr.Slider(minimum=10, maximum=50, step=1, value=10, label="Steps",
-                                                             interactive=True)
+                                                             visible=True, interactive=True)
                                 scale_slider = gr.Slider(minimum=0, maximum=50, step=0.1, value=7.5,
                                                          label="Guidance Scale", interactive=True)
                                 img_H_slider = gr.Slider(minimum=384, maximum=512, step=64, value=512,
@@ -214,8 +232,8 @@ def gr_advanced_page():
                                       random_seed_checkbox],
                               outputs=[output_gallery, seed_box])
 
-    advanced_app.launch(server_port=6006, share=False, quiet=False, show_error=False)
-    advanced_app.queue()
+    advanced_app.launch(server_port=6006, share=False, quiet=False, show_error=False, enable_queue=False)
+    advanced_app.queue(concurrency_count=3,)
 
 
 def gr_advanced_vertical_page():
@@ -234,7 +252,7 @@ def gr_advanced_vertical_page():
                             gr.Markdown("#### 提示词 - (请勿超过64个词)")
                             prompt_box = gr.Textbox(label="prompts", lines=1, show_label=False)
                             generate_button = gr.Button("开始绘画", elem_id="go_button").style(full_width="True")
-                        gr.Markdown("[翻译器](https://www.deepl.com/translator)")
+                        gr.Markdown("[翻译器](https://www.deepl.com/translator)   [探索提示词](https://openart.ai/)")
                     output_gallery = gr.Gallery(interactive=False).style(grid=[2], height="auto")
 
                 with gr.Column():
@@ -248,16 +266,13 @@ def gr_advanced_vertical_page():
                                                                elem_id="random_seed")
                         with gr.Row():
                             ddim_step_slider = gr.Slider(minimum=10, maximum=50, step=1, value=10, label="Steps",
-                                                         interactive=True)
+                                                         visible=True, interactive=True)
                             scale_slider = gr.Slider(minimum=0, maximum=50, step=0.1, value=7.5,
                                                      label="Guidance Scale", interactive=True)
                             img_H_slider = gr.Slider(minimum=384, maximum=512, step=64, value=512,
                                                      label="Img Height", interactive=True)
                             img_W_slider = gr.Slider(minimum=384, maximum=512, step=64, value=512,
                                                      label="Img Width", interactive=True)
-                            # ddim_eta_slider = gr.Slider(minimum=0.0, maximum=1.0, step=0.1, value=0.0, label="ddim_eta", interactive=True)
-                            # n_sample_slider = gr.Slider(minimum=1, maximum=5, step=1, value=4, label="n_sample", interactive=True)
-                            # n_iter_slider = gr.Slider(minimum=1, maximum=5, step=1, value=1, label="n_iter", interactive=True)
                         gr.Markdown(value=parameter_description)
 
                     ex = gr.Examples(examples=examples,
@@ -301,10 +316,14 @@ if __name__ == '__main__':
 
     # ----------
     # 调试用 覆盖args
-    opt.config = "./configs/stable-diffusion/v1-inference.yaml"
-    opt.ckpt = "./models/stable-diffusion-v1-4-original/sd-v1-4.ckpt"
-    opt.out_dir = "outputs/"  # output dir
+    opt.config = "/root/Image_synthesis_webpage/stable-diffusion/configs/v1-inference.yaml"
+    opt.ckpt = "/root/Image_synthesis_webpage/stable-diffusion/models/v1-5-stable-diffuion.ckpt"
+    opt.out_dir = "/root/Image_synthesis_webpage/stable-diffusion/outputs/"  # output dir
     # ----------
+
+    # profanity_filter
+    profanity_filter = pron_filter("/root/Image_synthesis_webpage/stable-diffusion/utils/pron_blacklist.txt")
+    draw_warning_img = Image.open("/root/Image_synthesis_webpage/stable-diffusion/utils/draw_warning.png")
 
     # kill all old gradio wrap
     gr.close_all()

@@ -222,8 +222,6 @@ def main_class(opt):
     tic_time = time.time()
     all_samples = txt2img.synthesis(opt.prompt, img_H=256, img_W=256, seed=np.random.randint(1, 1000000),
                                     n_samples=3, n_iter=3, ddim_steps=50, scale=5.0, ddim_eta=0.0)
-    # all_samples = txt2img.synthesis(opt.prompt, img_H=384, img_W=1024, seed=2156486,
-    #                                 n_samples=1, n_iter=1, ddim_steps=50, scale=5.0, ddim_eta=1.0)
     txt2img.save_img(all_samples, single_save=True, grid_save=True)
     print(time.time() - tic_time)
 

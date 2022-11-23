@@ -4,6 +4,7 @@
 
 ### 前缀
 
+1. 一幅素描画：A sketch painting
 1. 一幅儿童画：a child's drawing
 1. 一张数码照片：a digital painting
 1. 油画：an oil painting
@@ -55,11 +56,12 @@
 
 #### 6. 艺术家风格
 
-1. Greg Rutkowski
-2. Thomas Kinkade
-3. Rene Magritte
-4. James gurney
-5. Vincent van Gogh
+1. Salvador Dali
+2. Greg Rutkowski
+3. Thomas Kinkade
+4. Rene Magritte
+5. James gurney
+6. Vincent van Gogh
 
 #### 7. 描述与控制
 
@@ -80,11 +82,14 @@
    1. 光照效果 lighting effect
    2. 体积照明 volume lighting
 
+4. 获奖作品 award winning
+
 ---
 
 #### 注意事项:
 
-1. 描述语可以切分到多段
+1. 可以考虑多使用 award winning, fine details, lighting effect, 4K, cinematic 这类词, 能有效提高画面质量
+1. 不同的提示词或句应用逗号隔开，在同一句子中靠前的词优先级更高，逗号隔开的词或句无先后顺序区别
 1. 慎用动词，尽量使用状态词或形容词代替 例如: `陨石从天而降`换成`一个坠落的陨石`
 1. 慎用彩色，可能导致画面过于花哨而缺少美感
 1. 尽量选择对的艺术家`Greg Rutkowski`和`Thomas Kinkade`两个默认的画师可以多用
@@ -104,6 +109,10 @@ ex_scale = 7.5
 ex_seed = 1024
 
 examples = [
+    ["Water in weightlessness if not subjected to external forces will eventually appear spherical,Thomas Kinkade,black and white,black and white,Future city", ex_steps, ex_scale, 1739068543, ],
+    ["An hourglass clock in a dry riverbed when the ecological crisis comes,Greg Rutkowski,James gurney", ex_steps, ex_scale, 123725176],
+    ["melt clock,black tree like ash, A sketch painting", ex_steps, ex_scale, 403637236, ],
+    ["A Salvador Dali painting of melting clocks over rainforest trees", ex_steps, ex_scale, ex_seed, ],
     ["cat, sticker, illustration, japanese style", ex_steps, ex_scale, ex_seed, ],
     ["cyberpunk city", ex_steps, ex_scale, ex_seed, ],
     ["A magnificent picture never seen before", ex_steps, ex_scale, ex_seed, ],
