@@ -100,7 +100,7 @@ def pron_filter(blacklist_path="utils/pron_blacklist.txt"):
     assert os.path.exists(blacklist_path), "{} not found".format(blacklist_path)
     # read blacklist
     profanity_filter = ProfanityFilter()
-    profanity_filter.add_from_file("utils/pron_blacklist.txt")
+    profanity_filter.add_from_file(blacklist_path)
     # print(profanity_filter.blacklist)
     # pass
     # print()
