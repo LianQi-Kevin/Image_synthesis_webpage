@@ -1,4 +1,3 @@
-import re
 import os
 from string import punctuation as EN_punctuation
 from string import whitespace
