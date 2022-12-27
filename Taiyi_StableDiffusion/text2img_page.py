@@ -2,14 +2,18 @@ import json
 import logging
 import os
 import time
+import torch
 from uuid import uuid4
 
 import gradio as gr
 import numpy as np
 from PIL import Image
 
+from utils.pron_filter import blacklist_filter as ProfanityFilter
 from utils.prompt_note import prompt_note, examples, parameter_description
-from utils.text2img import make_args, text2img
+from utils.text2img import make_args
+from diffusers import StableDiffusionPipeline
+from pytorch_lightning import seed_everything
 
 
 def log_set():
@@ -25,7 +29,7 @@ def log_set():
 
     # 使用StreamHandler输出到屏幕
     ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
+    ch.setLevel(logging.INFO)
     ch.setFormatter(formatter)
 
     # 添加两个Handler
@@ -39,6 +43,13 @@ def concat_img(images, grid_size=2, img_H=512, img_W=512):
         for col in range(grid_size):
             grid_img.paste(images[grid_size * row + col], (0 + img_W * col, 0 + img_H * row))
     return grid_img
+
+
+def pron_filter(blacklist_path="utils/pron_blacklist.txt"):
+    assert os.path.exists(blacklist_path), "{} not found".format(blacklist_path)
+    profanity_filter = ProfanityFilter()
+    profanity_filter.add_from_file(blacklist_path)
+    return profanity_filter
 
 
 def save_img(images, prompt, seed, ddim_steps=50, scale=7.5, img_H=512, img_W=512,
@@ -97,7 +108,7 @@ def save_img(images, prompt, seed, ddim_steps=50, scale=7.5, img_H=512, img_W=51
 
 def gr_interface(prompt, seed=np.random.randint(1, 2147483646), ddim_steps=50, scale=7.5, img_H=512, img_W=512,
                  random_seed=False, n_samples=4, n_iter=1, ddim_eta=0.0):
-    global txt2img
+    global txt2img, profanity_filter
 
     if random_seed:
         seed = np.random.randint(1, 2147483646)
@@ -108,13 +119,26 @@ def gr_interface(prompt, seed=np.random.randint(1, 2147483646), ddim_steps=50, s
     logging.info(f"Seed: {seed}, ddim_steps={ddim_steps}, scale={scale}, img_H={img_H}, img_W={img_W}")
     logging.info(f"n_samples={n_samples}, n_iter={n_iter}, ddim_eta={ddim_eta}")
 
-    all_samples = txt2img.synthesis(prompt, seed=seed, n_samples=int(n_samples), n_iter=int(n_iter),
-                                    img_H=img_H, img_W=img_W, ddim_steps=int(ddim_steps), scale=scale,
-                                    ddim_eta=ddim_eta)
-    images = txt2img.postprocess(all_samples, single=True)
-    output_path = "/root/Image_synthesis_webpage/stable-diffusion/outputs/"
-    save_img(images, prompt, seed, ddim_steps, scale, img_H, img_W, n_samples, n_iter, ddim_eta, output_path=output_path)
-    return images, int(seed)
+    print(profanity_filter.is_profane(prompt))
+    # check pron_blacklist
+    if profanity_filter.is_profane(prompt):
+        logging.warning(f"Found pron word in {prompt}")
+        print(profanity_filter.censor(prompt))
+        return [draw_warning_img, draw_warning_img, draw_warning_img, draw_warning_img], int(seed)
+    else:
+        # seed
+        seed_everything(seed)
+
+        output = pipe_text2img(prompt, width=img_W, height=img_H, guidance_scale=scale,
+                               num_inference_steps=ddim_steps, num_images_per_prompt=4)
+        # images = output.images[0]
+        images = output.images
+        # for index, img in enumerate(images):
+        #     img.save("{}.png".format(index))
+        # images[0].save("test.png")
+        output_path = "/root/Image_synthesis_webpage/Taiyi_StableDiffusion/outputs/"
+        save_img(images, prompt, seed, ddim_steps, scale, img_H, img_W, n_samples, n_iter, ddim_eta, output_path=output_path)
+        return images, int(seed)
 
 
 def gr_interface_un_save(prompt, ddim_steps=50, scale=7.5, seed=1024, img_H=512, img_W=512,
@@ -125,10 +149,19 @@ def gr_interface_un_save(prompt, ddim_steps=50, scale=7.5, seed=1024, img_H=512,
     logging.info(f"Seed: {seed}, ddim_steps={ddim_steps}, scale={scale}, img_H={img_H}, img_W={img_W}")
     logging.info(f"n_samples={n_samples}, n_iter={n_iter}, ddim_eta={ddim_eta}")
 
-    all_samples = txt2img.synthesis(prompt, seed=seed, n_samples=int(n_samples), n_iter=int(n_iter),
-                                    img_H=img_H, img_W=img_W, ddim_steps=int(ddim_steps), scale=scale,
-                                    ddim_eta=ddim_eta)
-    images = txt2img.postprocess(all_samples, single=True)
+    # all_samples = txt2img.synthesis(prompt, seed=seed, n_samples=int(n_samples), n_iter=int(n_iter),
+    #                                 img_H=img_H, img_W=img_W, ddim_steps=int(ddim_steps), scale=scale,
+    #                                 ddim_eta=ddim_eta)
+    # images = txt2img.postprocess(all_samples, single=True)
+
+    # seed
+    seed_everything(seed)
+
+    output = pipe_text2img(prompt, width=img_W, height=img_H, guidance_scale=scale, num_inference_steps=ddim_steps,
+                           num_images_per_prompt=4)
+    # images = output.images[0]
+    images = output.images
+    # print(type(images))
 
     return images, int(seed)
 
@@ -298,16 +331,28 @@ if __name__ == '__main__':
 
     # ----------
     # 调试用 覆盖args
-    opt.config = "/root/Image_synthesis_webpage/stable-diffusion/configs/stable-diffusion/v1-inference.yaml"
-    opt.ckpt = "/root/Image_synthesis_webpage/stable-diffusion/models/stable-diffusion-v1-4-original/sd-v1-4.ckpt"
-    opt.out_dir = "/root/Image_synthesis_webpage/stable-diffusion/outputs/"  # output dir
+
+    opt.out_dir = "/root/Image_synthesis_webpage/Taiyi_StableDiffusion/outputs/"  # output dir
     # ----------
 
     # kill all old gradio wrap
     gr.close_all()
 
+    # set huggingface cache
+    # os.environ['HF_HOME'] = "/root/autodl-tmp/models"
+
+    # profanity_filter
+    profanity_filter = pron_filter("/root/Image_synthesis_webpage/Taiyi_StableDiffusion/utils/pron_blacklist.txt")
+    draw_warning_img = Image.open("/root/Image_synthesis_webpage/Taiyi_StableDiffusion/utils/draw_warning.png")
+
+    # FP16
+    torch.backends.cudnn.benchmark = True
+
     # init text2img
-    txt2img = text2img(ckpt=opt.ckpt, config=opt.config, output_dir=opt.out_dir)
+    device = "cuda"
+    # model_id = "IDEA-CCNL/Taiyi-Stable-Diffusion-1B-Chinese-v0.1"
+    model_id = "IDEA-CCNL/Taiyi-Stable-Diffusion-1B-Chinese-EN-v0.1"
+    pipe_text2img = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16).to(device)
 
     # gr_basic_page()
     # gr_advanced_page()
