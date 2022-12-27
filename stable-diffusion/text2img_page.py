@@ -316,8 +316,9 @@ if __name__ == '__main__':
 
     # ----------
     # 调试用 覆盖args
-    opt.config = "/root/Image_synthesis_webpage/stable-diffusion/configs/v1-inference.yaml"
-    opt.ckpt = "/root/Image_synthesis_webpage/stable-diffusion/models/v1-5-stable-diffuion.ckpt"
+    opt.config = "/root/Image_synthesis_webpage/stable-diffusion/configs/stable-diffusion/v2-inference.yaml"
+    # opt.ckpt = "/root/Image_synthesis_webpage/stable-diffusion/models/v1-5-stable-diffuion.ckpt"
+    opt.ckpt = "/root/Image_synthesis_webpage/stable-diffusion/models/v2-1_512-ema-pruned.ckpt"
     opt.out_dir = "/root/Image_synthesis_webpage/stable-diffusion/outputs/"  # output dir
     # ----------
 
