@@ -4,11 +4,11 @@
 
 #### Step - 1. Create env
 ```shell
-wget https://github.com/CompVis/stable-diffusion/archive/refs/heads/main.zip
-unzip main.zip && rm main.zip && mv stable-diffusion-main stable-diffusion && cd stable-diffusion
+wget https://github.com/Stability-AI/stablediffusion/archive/refs/heads/main.zip
+unzip main.zip && rm main.zip && mv stablediffusion-main stable-diffusion && cd stable-diffusion
 conda env create -f environment.yaml
 conda activate ldm
-pip install gradio==3.1.6
+pip install gradio==3.1.6 zhon
 ```
 
 
@@ -25,7 +25,7 @@ cd /root/Image_synthesis_webpage/stable-diffusion
 
 #### Step - 3. Download model
 
-> Visit [CompVis/stable-diffusion-v-1-4-original](https://huggingface.co/CompVis/stable-diffusion-v-1-4-original) to download model
+> Visit [stabilityai/stable-diffusion-2-1-base](https://huggingface.co/stabilityai/stable-diffusion-2-1-base) to download the model 'v2-1_512-ema-pruned.ckpt'
 > 
 > Save model to /root/Image_synthesis_webpage/stable-diffusion/models/
 
