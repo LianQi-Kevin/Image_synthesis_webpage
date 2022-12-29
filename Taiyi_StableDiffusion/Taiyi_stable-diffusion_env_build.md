@@ -8,8 +8,7 @@ conda env create -n Taiyi python=3.8
 conda activate Taiyi
 conda install pytorch==1.10.0 torchvision==0.11.0 torchaudio==0.10.0 cudatoolkit=11.3 -c pytorch -c conda-forge
 conda install -c conda-forge diffusers
-pip install gradio==3.1.6 transformers accelerate pytorch-lightning tensorboard zhon
-  
+pip install gradio==3.1.6 transformers accelerate pytorch-lightning tensorboard zhon setuptools==59.5.0
 ```
 
 #### Step - 2. Huggingface login
