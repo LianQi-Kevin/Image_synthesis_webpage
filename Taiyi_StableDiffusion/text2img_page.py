@@ -12,7 +12,8 @@ from PIL import Image
 from diffusers import StableDiffusionPipeline
 from pytorch_lightning import seed_everything
 
-from utils.prompt_note import prompt_note, examples, parameter_description
+from utils.prompt_note import prompt_note, parameter_description
+from utils.prompt_note import examples_ZH as examples
 from utils.pron_filter import blacklist_filter as ProfanityFilter
 from utils.utils import log_set, concat_img
 

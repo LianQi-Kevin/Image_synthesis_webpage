@@ -1,4 +1,5 @@
-﻿prompt_note = """
+﻿# prompt writing guide
+prompt_note = """
 <details>
 <summary>Stable-Diffusion提示词模板</summary>
 
@@ -99,11 +100,13 @@
 
 #### 
 ---
-- Model: [CompVis/stable-diffusion](https://github.com/CompVis/stable-diffusion)
+- Model: [IDEA-CCNL/Taiyi-Stable-Diffusion](https://huggingface.co/IDEA-CCNL/Taiyi-Stable-Diffusion-1B-Chinese-EN-v0.1)
 - UI Design: [刘学恺](https://github.com/LianQi-Kevin)
 
 """
 
+
+# examples
 ex_steps = 10
 ex_scale = 7.5
 ex_seed = 1024
@@ -138,6 +141,17 @@ examples = [
     ["A small cabin on top of a snowy mountain in the style of Disney, artstation", ex_steps, ex_scale, ex_seed, ]
 ]
 
+examples_ZH = [
+    ["小桥流水人家, 水彩, 日式", ex_steps, ex_scale, 434626447, ],
+    ["君不见黄河之水天上来, 唯美, 油画", ex_steps, ex_scale, 1124791316, ],
+    ["滔滔江水, 连绵不绝, 唯美, 插画", ex_steps, ex_scale, 1091363613, ],
+    ["飞流直下三千尺, 唯美, 插画", ex_steps, ex_scale, 979268866, ],
+    ["云南苗家古寨, 原始森林, 鸟语花香, 唯美, 插画", 50, ex_scale, 253987602, ],
+    ["东临碣石, 以观沧海, 水何澹澹, 山岛竦峙", 50, ex_scale, 1227278468, ],
+]
+
+
+# Option explanation
 parameter_description = """
 ####
 - **Seed**: the seed (for reproducible sampling).
