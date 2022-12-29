@@ -19,3 +19,10 @@ huggingface-cli login
 ```
 
 > https://huggingface.co/docs/huggingface_hub/quick-start
+> 
+#### Step - 3. Change huggingface cache folder
+因为autodl的服务器仅有25GB系统盘，故无法再不扩容的情况下存放模型，故修改huggingface默认的缓存路径
+```shell
+echo 'export HF_HOME="/root/autodl-tmp/models"' >> /root/.bashrc
+source /root/.bashrc
+```
