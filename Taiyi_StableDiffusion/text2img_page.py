@@ -15,7 +15,7 @@ from pytorch_lightning import seed_everything
 from utils.prompt_note import prompt_note, parameter_description
 from utils.prompt_note import examples_ZH as examples
 from utils.pron_filter import blacklist_filter as ProfanityFilter
-from utils.utils import log_set, concat_img
+from utils.utils import log_set, concat_img, clear_port
 
 
 # save images
@@ -233,7 +233,7 @@ if __name__ == '__main__':
     global_index = 0
 
     # kill all old gradio wrap
-    gr.close_all()
+    clear_port(port=6006)
 
     # profanity_filter
     profanity_filter = pron_filter("/root/Image_synthesis_webpage/Taiyi_StableDiffusion/utils/pron_blacklist.txt")

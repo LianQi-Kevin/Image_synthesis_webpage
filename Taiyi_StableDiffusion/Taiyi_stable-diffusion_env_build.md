@@ -26,3 +26,8 @@ huggingface-cli login
 echo 'export HF_HOME="/root/autodl-tmp/models"' >> /root/.bashrc
 source /root/.bashrc
 ```
+
+#### Step - 4. Install network tool
+```shell
+apt update && apt install net-tools lsof
+```
