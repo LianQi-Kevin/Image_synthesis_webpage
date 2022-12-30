@@ -18,7 +18,7 @@ environment build note: [min-dalle_env_build.md](min-dalle/min-dalle_env_build.m
 
 ### 3. stable-diffusion
 
-source repository: [CompVis/stable-diffusion](https://github.com/CompVis/stable-diffusion)
+source repository: [Stability-AI/stablediffusion](https://github.com/Stability-AI/stablediffusion)
 
 environment build note: [stable-diffusion_env_build.md](stable-diffusion/stable-diffusion_env_build.md)
 
@@ -28,6 +28,11 @@ source repository: [borisdayma/dalle-mini](https://github.com/borisdayma/dalle-m
 
 environment build note: [dalle-mini_env_build.md](dalle-mini/dalle-mini_env_build.md)
 
+### 5. Taiyi Stable Diffusion
+
+source repository: [IDEA-CCNL/Taiyi-Stable-Diffusion](https://huggingface.co/IDEA-CCNL/Taiyi-Stable-Diffusion-1B-Chinese-EN-v0.1)
+
+environment build note: [Taiyi_stable-diffusion_env_build.md](Taiyi_StableDiffusion/Taiyi_stable-diffusion_env_build.md)
 
 ---
 
