@@ -97,10 +97,15 @@
 
 </details>
 
-#### 
+"""
+
+end_message = """
+##
+
 ---
-- Model: [CompVis/stable-diffusion](https://github.com/CompVis/stable-diffusion)
-- UI Design: [刘学恺](https://github.com/LianQi-Kevin)
+
+<center>Model: <a href="https://github.com/Stability-AI/stablediffusion">Stability-AI/stablediffusion</a></center>
+<center>UI Design: <a href="https://github.com/LianQi-Kevin">刘学恺</a></center>
 
 """
 
@@ -145,4 +150,19 @@ parameter_description = """
 - **Steps**: number of ddim sampling steps.
 - **Img Height**: image height, in pixel space.
 - **Img Width**: image width, in pixel space.
+"""
+
+parameter_description_img2img = """
+####
+<details>
+<summary>Parameter Explanation</summary>
+
+- **Seed**: the seed (for reproducible sampling).
+- **Random Seed**: If True, a different seed will be used for each generated image.
+- **Steps**: number of ddim sampling steps.
+- **Strength**: strength for noising/unnoising. 1.0 corresponds to full destruction of information in init image.
+- **Img Height**: image height, in pixel space.
+- **Img Width**: image width, in pixel space.
+
+</details>
 """

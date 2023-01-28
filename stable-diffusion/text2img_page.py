@@ -159,8 +159,6 @@ def update_interactive(advanced_page):
 
 
 def gr_advanced_page():
-    global adv_visible
-
     with gr.Blocks(title="109美术高中AI与美术融合课", css="utils/text2img.css") as advanced_app:
         # gr.Column()   垂直      | gr.ROW()  水平
         with gr.Column():
@@ -237,8 +235,6 @@ def gr_advanced_page():
 
 
 def gr_advanced_vertical_page():
-    global adv_visible
-
     with gr.Blocks(title="109美术高中AI与美术融合课", css="utils/text2img.css") as advanced_app:
         # gr.Column()   垂直      | gr.ROW()  水平
         with gr.Column():
