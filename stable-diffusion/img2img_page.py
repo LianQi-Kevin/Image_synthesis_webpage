@@ -100,25 +100,27 @@ def update_img_shape(img_W, img_H):
 # generate img button click action
 def gr_interface(prompt, init_img_path, seed=np.random.randint(1, 2147483646), ddim_steps=50, strength=0.8,
                  scale=7.5, img_H=512, img_W=512, random_seed=True, n_samples=4, n_iter=1, ddim_eta=0.0):
-    global img2img, profanity_filter, draw_warning_img, args
+    global img2img, profanity_filter, draw_warning_img, args, init_warning_img
 
     if random_seed:
         seed = np.random.randint(1, 2147483646)
     else:
         seed = int(seed)
 
-    # init image
-    assert os.path.isfile(init_img_path)
-
     # print logging
     logging.info(f"Prompt: {prompt}")
     logging.info(f"Seed: {seed}, ddim_steps={ddim_steps}, scale={scale}, img_H={img_H}, img_W={img_W}")
     logging.info(f"n_samples={n_samples}, n_iter={n_iter}, ddim_eta={ddim_eta}, strength={strength}")
+    logging.info(f"init_img_path={init_img_path}")
+
+    # init image
+    if init_img_path is None:
+        return [init_warning_img], int(seed)
 
     # check pron_blacklist
     if profanity_filter.is_profane(prompt):
         logging.warning(f"Found pron word in {prompt}")
-        return [draw_warning_img, draw_warning_img, draw_warning_img, draw_warning_img], int(seed)
+        return [draw_warning_img], int(seed)
 
     # synthesis
     all_samples = img2img.synthesis(prompt=prompt,
@@ -168,10 +170,12 @@ def gr_advanced_vertical_page():
                     #### [翻译器](https://www.deepl.com/translator)   [探索提示词](https://openart.ai/)
                     ---
                     """)
-                    init_image = gr.Image(shape=(512, 512), image_mode="RGB", source="upload",
+                    init_image = gr.Image(shape=(512, 512), image_mode="RGB",
+                                          source="upload" if args.source_canvas else "canvas",
                                           type="filepath", tool="select", label="Init image",
                                           show_label=True, interactive=True, visible=True,
                                           elem_id="init_image")
+
                 with gr.Column():
                     gr.Markdown("""### 高级设置""")
                     with gr.Group():
@@ -213,6 +217,7 @@ def gr_advanced_vertical_page():
         random_seed_checkbox.change(update_interactive,
                                     inputs=[random_seed_checkbox],
                                     outputs=[seed_box])
+
         # img shape
         if args.show_img_HW:
             img_H_slider.change(update_img_shape,
@@ -245,6 +250,7 @@ if __name__ == '__main__':
     parser.add_argument("--config", "-c", type=str, help="Stable-diffusion model config path",
                         default="/root/Image_synthesis_webpage/stable-diffusion/configs/stable-diffusion/v2-inference.yaml")
     parser.add_argument("--step_un_show", "-u", action="store_false", help="whether step option is visible")
+    parser.add_argument("--source_canvas", "-s", action="store_false", help="set init img source to canvas")
     args = parser.parse_args()
 
     # logging set
@@ -260,11 +266,14 @@ if __name__ == '__main__':
     profanity_filter = pron_filter("/root/Image_synthesis_webpage/stable-diffusion/utils/pron_blacklist.txt")
     draw_warning_img = Image.open("/root/Image_synthesis_webpage/stable-diffusion/utils/draw_warning.png")
 
+    # load init_img warning
+    init_warning_img = Image.open("/root/Image_synthesis_webpage/stable-diffusion/utils/add_init_img.png")
+
     # img2img instance
     img2img = img2img(ckpt=args.ckpt, config=args.config)
 
     # -------- 调试用参数 --------
-    args.step_un_show = True
+    # args.step_un_show = True
     args.show_img_HW = False
     # --------------------------
 
