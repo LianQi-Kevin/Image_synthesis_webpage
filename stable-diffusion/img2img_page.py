@@ -18,7 +18,7 @@ from utils.utils import log_set, concat_img, clear_port
 
 
 # build save path and save images(grid_image, init_image, samples)
-def save_img(images, prompt, seed, init_image_path, ddim_steps=50, scale=7.5, img_H=512,
+def save_img(images: list, prompt: str, seed: int, init_image_path: str, ddim_steps=50, scale=7.5, img_H=512,
              img_W=512, n_samples=4, n_iter=1, ddim_eta=0.0, output_path="./outputs", ):
     """
         输出文件结构
