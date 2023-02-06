@@ -166,3 +166,6 @@ parameter_description_img2img = """
 
 </details>
 """
+
+title_msg = """## 109美术高中AI与美术融合课
+                """

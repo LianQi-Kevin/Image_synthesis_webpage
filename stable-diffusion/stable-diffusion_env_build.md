@@ -8,7 +8,7 @@ wget https://github.com/Stability-AI/stablediffusion/archive/refs/heads/main.zip
 unzip main.zip && rm main.zip && mv stablediffusion-main stable-diffusion && cd stable-diffusion
 conda env create -f environment.yaml
 conda activate ldm
-pip install gradio==3.1.6 zhon
+pip install gradio==3.17.0 zhon
 ```
 
 
