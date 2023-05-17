@@ -105,7 +105,6 @@ end_message = """
 ---
 
 <center>Model: <a href="https://github.com/Stability-AI/stablediffusion">Stability-AI/stablediffusion</a></center>
-<center>UI Design: <a href="https://github.com/LianQi-Kevin">刘学恺</a></center>
 
 """
 
@@ -166,6 +165,3 @@ parameter_description_img2img = """
 
 </details>
 """
-
-title_msg = """## 109美术高中AI与美术融合课
-                """

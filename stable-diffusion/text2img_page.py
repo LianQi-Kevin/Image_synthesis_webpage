@@ -131,7 +131,8 @@ def gr_interface(prompt, seed=np.random.randint(1, 2147483646), ddim_steps=50, s
                                         ddim_eta=ddim_eta)
         images = txt2img.postprocess(all_samples, single=True)
         output_path = "/root/Image_synthesis_webpage/stable-diffusion/outputs/"
-        save_img(images, prompt, seed, ddim_steps, scale, img_H, img_W, n_samples, n_iter, ddim_eta, output_path=output_path)
+        save_img(images, prompt, seed, ddim_steps, scale, img_H, img_W, n_samples, n_iter, ddim_eta,
+                 output_path=output_path)
         return images, int(seed)
 
 
@@ -159,12 +160,9 @@ def update_interactive(advanced_page):
 
 
 def gr_advanced_page():
-    with gr.Blocks(title="109美术高中AI与美术融合课", css="utils/text2img.css") as advanced_app:
+    with gr.Blocks(title="AI With ART", css="utils/text2img.css") as advanced_app:
         # gr.Column()   垂直      | gr.ROW()  水平
         with gr.Column():
-            gr.Markdown("""## 109美术高中AI与美术融合课
-            - - -
-            """)
             with gr.Row():
                 with gr.Column():
                     with gr.Column():
@@ -181,7 +179,8 @@ def gr_advanced_page():
                         gr.Markdown("### 高级设置")
                         with gr.Group():
                             with gr.Row():
-                                seed_box = gr.Number(label="Seed", value=np.random.randint(1, 2147483646), interactive=False,
+                                seed_box = gr.Number(label="Seed", value=np.random.randint(1, 2147483646),
+                                                     interactive=False,
                                                      elem_id="seed_box")
                                 random_seed_checkbox = gr.Checkbox(label="Random Seed", value=True, interactive=True,
                                                                    elem_id="random_seed")
@@ -231,16 +230,13 @@ def gr_advanced_page():
                               outputs=[output_gallery, seed_box])
 
     advanced_app.launch(server_port=6006, share=False, quiet=False, show_error=False, enable_queue=False)
-    advanced_app.queue(concurrency_count=3,)
+    advanced_app.queue(concurrency_count=3, )
 
 
 def gr_advanced_vertical_page():
-    with gr.Blocks(title="109美术高中AI与美术融合课", css="utils/text2img.css") as advanced_app:
+    with gr.Blocks(title="AI With ART", css="utils/text2img.css") as advanced_app:
         # gr.Column()   垂直      | gr.ROW()  水平
         with gr.Column():
-            gr.Markdown("""## 109美术高中AI与美术融合课
-                - - -
-                """)
             with gr.Row():
                 with gr.Column():
                     with gr.Column():
@@ -301,7 +297,6 @@ def gr_advanced_vertical_page():
                               outputs=[output_gallery, seed_box])
 
     advanced_app.launch(server_port=6006, share=False, quiet=False, show_error=False, enable_queue=True)
-    # advanced_app.queue(concurrency_count=1, status_update_rate="auto", )
 
 
 if __name__ == '__main__':

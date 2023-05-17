@@ -11,7 +11,7 @@ import numpy as np
 from PIL import Image
 
 from utils.all2img import all2img
-from utils.prompt_note import parameter_description_img2img, parameter_description, title_msg
+from utils.prompt_note import parameter_description_img2img, parameter_description
 from utils.prompt_note import prompt_note, end_message, examples
 from utils.pron_filter import blacklist_filter as ProfanityFilter
 from utils.utils import log_set, concat_img, clear_port
@@ -201,8 +201,7 @@ def img2img_infer(prompt, init_img_path, canvas_init_path, seed=np.random.randin
 def gr_advanced_vertical_page():
     global args
 
-    with gr.Blocks(title="109美术高中AI与美术融合课", css="utils/text2img.css") as advanced_app:
-        gr.Markdown(title_msg)
+    with gr.Blocks(title="AI With ART", css="utils/text2img.css") as advanced_app:
         with gr.Tab("Text to Img"):
             with gr.Column():
                 with gr.Row():

@@ -154,12 +154,9 @@ def gr_interface(prompt, init_img_path, seed=np.random.randint(1, 2147483646), d
 # gradio page
 def gr_advanced_vertical_page():
     global args
-    with gr.Blocks(title="109美术高中AI与美术融合课", css="utils/text2img.css") as advanced_app:
+    with gr.Blocks(title="AI With ART", css="utils/text2img.css") as advanced_app:
         with gr.Column():
             # gr.Column()   垂直      | gr.ROW()  水平
-            gr.Markdown("""## 109美术高中AI与美术融合课
-                        - - -
-                        """)
             with gr.Row():
                 with gr.Column():
                     with gr.Group():
