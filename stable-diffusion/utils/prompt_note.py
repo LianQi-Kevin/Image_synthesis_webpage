@@ -102,8 +102,6 @@
 end_message = """
 ##
 
----
-
 <center>Model: <a href="https://github.com/Stability-AI/stablediffusion">Stability-AI/stablediffusion</a></center>
 
 """

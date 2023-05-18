@@ -80,9 +80,9 @@ class all2img(object):
             raise TypeError(f"Unsupported {suffix} model")
 
         # write model item
-        with open(f"/root/Image_synthesis_webpage/stable-diffusion/{os.path.basename(self.ckpt)}.json", "w") as f:
-            import json
-            json.dump(replace_complex_with_basic(pl_sd), f, sort_keys=True, indent=2)
+        # with open(f"/root/Image_synthesis_webpage/stable-diffusion/{os.path.basename(self.ckpt)}.json", "w") as f:
+        #     import json
+        #     json.dump(replace_complex_with_basic(pl_sd), f, sort_keys=True, indent=2)
 
         model = instantiate_from_config(config.model)
         m, u = model.load_state_dict(pl_sd, strict=False)

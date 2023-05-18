@@ -5,6 +5,7 @@
 *example.docx
 *test.py
 *.bk
+API_KEY.py
 
 .idea
 .ipynb_checkpoints

@@ -15,6 +15,7 @@ from utils.logging_utils import log_set
 from utils.prompt_note import parameter_description_img2img, parameter_description
 from utils.prompt_note import prompt_note, end_message, examples
 from utils.pron_filter import blacklist_filter as ProfanityFilter
+from utils.YoudaoTranslate import YoudaoTranslate
 from utils.utils import concat_img, clear_port
 
 
@@ -97,7 +98,7 @@ def update_visible(switch_button):
 
 
 def update_state_value(evt: gr.SelectData):
-    logging.info(f"Switch to '{evt.value}' tab")
+    # logging.info(f"Switch to '{evt.value}' tab")
     return evt.value
 
 
@@ -206,18 +207,42 @@ def generate_type(status, prompt: str, init_img_path: str, canvas_init_path: str
         return None, text2img_seed, images, seed
 
 
+def text_translate(text, target_language="英语"):
+    if target_language == "英语":
+        target_language = "en"
+    elif target_language == "中文":
+        target_language = "zh-CHS"
+    translated = youdao_translate.text_translate(text, source_language="auto", target_language=target_language)
+    logging.info(f"translate '{text}' to '{translated}'")
+    return translated
+
+
+def direct_translate_prompt(text):
+    return gr.update(value=text_translate(text))
+
+
+def send_target_to_prompt(translated_text):
+    logging.info(f"Send '{translated_text}' to Prompt box")
+    return gr.update(value=translated_text)
+
+
 def gr_advanced_vertical_page():
     global args
-    with gr.Blocks(title="AI_with_Art", css="utils/all2img.css") as advanced_app:
+    with gr.Blocks(title="AI_with_Art", css="utils/all2img.css") as demo:
         # prompt box
-        with gr.Box():
-            gr.Markdown("##### 提示词 - (请勿超过64个词)")
-            prompt_box = gr.Textbox(label="prompts", lines=1, placeholder="请输入提示词(请勿超过64个词)",
+        with gr.Column():
+            with gr.Row():
+                gr.Markdown("### 提示词 - (请勿超过64个词)")
+                auto_translate_button = gr.Button(value="Translate Prompt",
+                                                  elem_classes="btn", elem_id="directTranslate")
+            prompt_box = gr.Textbox(label="prompts", lines=1, placeholder="请输入提示词",
                                     show_label=False)
             generate_button = gr.Button("开始绘画", elem_classes="btn")
 
             prompt_box.style(container=False)
             generate_button.style(full_width=True)
+
+            auto_translate_button.click(direct_translate_prompt, inputs=[prompt_box], outputs=[prompt_box])
 
         # text to img
         with gr.Tab("Text to Img", id=0) as text2img:
@@ -297,8 +322,6 @@ def gr_advanced_vertical_page():
                 with gr.Column():
                     gr.Markdown(value=parameter_description_img2img)
 
-            gr.Markdown(value=end_message)
-
             # style
             switch_button.style(full_width=True)
             img2img_output_gallery.style(columns=2, height="auto")
@@ -315,6 +338,20 @@ def gr_advanced_vertical_page():
         with gr.Tab("Prompt Translate", id=2) as prompt_translate:
             target_language = gr.Dropdown(choices=["中文", "英文"], value="英文", label="Target Language", type="value",
                                           multiselect=False, allow_custom_value=False, interactive=True)
+            with gr.Row():
+                with gr.Column():
+                    source_text = gr.Textbox(label="Source Text", lines=3, max_lines=10, interactive=True)
+                with gr.Column():
+                    translated_text = gr.Textbox(label="Target Text", lines=3, max_lines=10, interactive=True)
+            with gr.Row():
+                translate_button = gr.Button(value="Translate", show_label=False, elem_classes="btn")
+                send_button = gr.Button(value="Send to Prompt Box", show_label=False, elem_classes="btn")
+
+            source_text.submit(text_translate, inputs=[source_text, target_language], outputs=[translated_text])
+            translate_button.click(text_translate, inputs=[source_text, target_language], outputs=[translated_text])
+            send_button.click(send_target_to_prompt, inputs=[translated_text], outputs=[prompt_box])
+
+        gr.Markdown(value=end_message)
 
         # tab message state
         used_tab = gr.State("Text to Img")
@@ -343,8 +380,8 @@ def gr_advanced_vertical_page():
                               outputs=[text2img_output_gallery, text2img_seed_box, img2img_output_gallery,
                                        img2img_seed_box])
 
-    advanced_app.queue(concurrency_count=2, max_size=15)
-    advanced_app.launch(show_error=False, server_port=6006, share=False, quiet=False)
+    demo.queue(concurrency_count=2, max_size=15, status_update_rate="auto")
+    demo.launch(show_error=False, share=False, quiet=False, server_port=6006)
 
 
 if __name__ == '__main__':
@@ -387,6 +424,12 @@ if __name__ == '__main__':
     # load models
     all2img = all2img(ckpt=args.ckpt, config=args.config, output_dir=args.out_dir)
     logging.info("Successful initialization synthesis class")
+
+    # load translate tool
+    # you can get this from https://ai.youdao.com/product-fanyi-text.s
+    APP_KEY = 'YOUR APP KEY'
+    APP_SECRET = 'YOUR APP SECRET'
+    youdao_translate = YoudaoTranslate(APP_KEY=APP_KEY, APP_SECRET=APP_SECRET)
 
     # run
     gr_advanced_vertical_page()

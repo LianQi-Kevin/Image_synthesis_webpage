@@ -2,3 +2,18 @@
     height: 40px;
     max-height: 40px;
 }
+
+#directTranslate {
+    width: 180px;
+    max-width: 180px;
+}
+
+* {
+  overflow-y: scroll;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
