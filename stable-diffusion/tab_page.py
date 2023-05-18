@@ -228,7 +228,7 @@ def send_target_to_prompt(translated_text):
 
 def gr_advanced_vertical_page():
     global args
-    with gr.Blocks(title="AI_with_Art", css="utils/all2img.css") as demo:
+    with gr.Blocks(title="AI_with_Art", css="/root/Image_synthesis_webpage/stable-diffusion/utils/all2img.css") as demo:
         # prompt box
         with gr.Column():
             with gr.Row():
@@ -427,8 +427,7 @@ if __name__ == '__main__':
 
     # load translate tool
     # you can get this from https://ai.youdao.com/product-fanyi-text.s
-    APP_KEY = 'YOUR APP KEY'
-    APP_SECRET = 'YOUR APP SECRET'
+    from API_KEY import APP_KEY, APP_SECRET
     youdao_translate = YoudaoTranslate(APP_KEY=APP_KEY, APP_SECRET=APP_SECRET)
 
     # run

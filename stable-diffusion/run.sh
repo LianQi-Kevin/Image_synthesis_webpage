@@ -4,6 +4,7 @@ config_path="/root/Image_synthesis_webpage/stable-diffusion/configs/stable-diffu
 
 #create export folder
 mkdir -p "/root/autodl-tmp/outputs"
+mkdir -p "/root/autodl-tmp/models"
 
 #run
 /root/miniconda3/envs/ldm/bin/python /root/Image_synthesis_webpage/stable-diffusion/tab_page.py \
