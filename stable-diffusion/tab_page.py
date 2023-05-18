@@ -1,9 +1,9 @@
+import argparse
 import json
 import logging
 import os
-import time
-import argparse
 import shutil
+import time
 from uuid import uuid4
 
 import gradio as gr
@@ -11,17 +11,17 @@ import numpy as np
 from PIL import Image
 
 from utils.all2img import all2img
+from utils.logging_utils import log_set
 from utils.prompt_note import parameter_description_img2img, parameter_description
 from utils.prompt_note import prompt_note, end_message, examples
 from utils.pron_filter import blacklist_filter as ProfanityFilter
 from utils.utils import concat_img, clear_port
-from utils.logging_utils import log_set
 
 
 # build save path and save images(grid_image, init_image, samples)
 def save_img(images: list, prompt: str, seed: int, ddim_steps: int, scale: float, strength: float = None,
-             init_img_path: str = None, img_H=512, img_W=512, n_samples=4, n_iter=4,
-             ddim_eta: float = 1.0, output_path="outputs"):
+             init_img_path: str = None, img_H=512, img_W=512, n_samples=4, n_iter=4, ddim_eta: float = 1.0,
+             output_path="outputs"):
     """
         'export files'
         outputs
@@ -42,19 +42,9 @@ def save_img(images: list, prompt: str, seed: int, ddim_steps: int, scale: float
     output_dir = os.path.join(output_path, project_uuid)
     sample_path = os.path.join(output_dir, "samples")
     os.makedirs(sample_path, exist_ok=True)
-    config_dict = {
-        "prompts": prompt,
-        "seed": seed,
-        "ddim_steps": ddim_steps,
-        "ddim_eta": ddim_eta,
-        "scale": scale,
-        "img_H": img_H,
-        "img_W": img_W,
-        "n_samples": n_samples,
-        "n_iter": n_iter,
-        "grid_path": os.path.join(output_dir, "grid.png"),
-        "samples_path": list()
-    }
+    config_dict = {"prompts": prompt, "seed": seed, "ddim_steps": ddim_steps, "ddim_eta": ddim_eta, "scale": scale,
+                   "img_H": img_H, "img_W": img_W, "n_samples": n_samples, "n_iter": n_iter,
+                   "grid_path": os.path.join(output_dir, "grid.png"), "samples_path": list()}
 
     # add img2img msg
     if init_img_path is not None and strength is not None:
@@ -88,9 +78,9 @@ def save_img(images: list, prompt: str, seed: int, ddim_steps: int, scale: float
 def pron_filter(blacklist_path="utils/pron_blacklist.txt"):
     assert os.path.exists(blacklist_path), "{} not found".format(blacklist_path)
     # read blacklist
-    profanity_filter = ProfanityFilter()
-    profanity_filter.add_from_file(blacklist_path)
-    return profanity_filter
+    filter_ = ProfanityFilter()
+    filter_.add_from_file(blacklist_path)
+    return filter_
 
 
 # update 'random seed' button interactive value
@@ -106,25 +96,27 @@ def update_visible(switch_button):
         return gr.update(visible=False), gr.update(visible=True), gr.update(value="switch to upload")
 
 
-def gr_interface_un_save(prompt, ddim_steps=50, scale=7.5, seed=1024, img_H=512, img_W=512,
-                         n_samples=4, n_iter=1, ddim_eta=0.0):
-    global all2img
+def update_state_value(evt: gr.SelectData):
+    logging.info(f"Switch to '{evt.value}' tab")
+    return evt.value
+
+
+def gr_interface_un_save(prompt, ddim_steps=50, scale=7.5, seed=1024, img_H=512, img_W=512, n_samples=4, n_iter=1,
+                         ddim_eta=0.0):
 
     logging.info(f"Prompt: {prompt}")
     logging.info(f"Seed: {seed}, ddim_steps={ddim_steps}, scale={scale}, img_H={img_H}, img_W={img_W}")
     logging.info(f"n_samples={n_samples}, n_iter={n_iter}, ddim_eta={ddim_eta}")
 
-    all_samples = all2img.text2img(prompt, seed=seed, n_samples=int(n_samples), n_iter=int(n_iter),
-                                   img_H=img_H, img_W=img_W, ddim_steps=int(ddim_steps), scale=scale,
-                                   ddim_eta=ddim_eta)
+    all_samples = all2img.text2img(prompt, seed=seed, n_samples=int(n_samples), n_iter=int(n_iter), img_H=img_H,
+                                   img_W=img_W, ddim_steps=int(ddim_steps), scale=scale, ddim_eta=ddim_eta)
     images = all2img.postprocess(all_samples, single=True)
 
     return images, int(seed)
 
 
-def text2img_infer(prompt, seed=np.random.randint(1, 2147483646), ddim_steps=50, scale=7.5, img_H=512, img_W=512,
-                   random_seed=False, n_samples=4, n_iter=1, ddim_eta=0.0):
-    global profanity_filter, draw_warning_img, args, all2img
+def text2img_infer(prompt, seed, ddim_steps, scale, img_H, img_W, random_seed, n_samples, n_iter, ddim_eta):
+    global profanity_filter, draw_warning_img, args
 
     if random_seed:
         seed = np.random.randint(1, 2147483646)
@@ -143,24 +135,22 @@ def text2img_infer(prompt, seed=np.random.randint(1, 2147483646), ddim_steps=50,
         return [draw_warning_img], int(seed)
 
     # synthesis
-    all_samples = all2img.text2img(prompt, seed=seed, n_samples=int(n_samples), n_iter=int(n_iter),
-                                   img_H=img_H, img_W=img_W, ddim_steps=int(ddim_steps), scale=scale,
-                                   ddim_eta=ddim_eta)
+    all_samples = all2img.text2img(prompt, seed=seed, n_samples=int(n_samples), n_iter=int(n_iter), img_H=img_H,
+                                   img_W=img_W, ddim_steps=int(ddim_steps), scale=scale, ddim_eta=ddim_eta)
 
     # postprocess
     images = all2img.postprocess(all_samples, single=True)
 
     # save
-    save_img(images=images, prompt=prompt, seed=seed, ddim_steps=ddim_steps, ddim_eta=ddim_eta,
-             scale=scale, img_H=img_H, img_W=img_W, n_samples=n_samples, n_iter=n_iter, output_path=args.out_dir)
+    save_img(images=images, prompt=prompt, seed=seed, ddim_steps=ddim_steps, ddim_eta=ddim_eta, scale=scale,
+             img_H=img_H, img_W=img_W, n_samples=n_samples, n_iter=n_iter, output_path=args.out_dir)
     return images, int(seed)
 
 
 # def img2img_infer():
-def img2img_infer(prompt, init_img_path, canvas_init_path, seed=np.random.randint(1, 2147483646), ddim_steps=50,
-                  strength=0.8, scale=7.5, img_H=512, img_W=512, random_seed=True,
-                  n_samples=4, n_iter=1, ddim_eta=0.0):
-    global all2img, profanity_filter, draw_warning_img, args, init_warning_img
+def img2img_infer(prompt, init_img_path, canvas_init_path, seed, ddim_steps, strength, scale, img_H, img_W, random_seed,
+                  n_samples, n_iter, ddim_eta):
+    global profanity_filter, draw_warning_img, args, init_warning_img
 
     if random_seed:
         seed = np.random.randint(1, 2147483646)
@@ -194,157 +184,159 @@ def img2img_infer(prompt, init_img_path, canvas_init_path, seed=np.random.randin
 
     # save
     save_img(images=images, init_img_path=init_img_path, prompt=prompt, strength=strength, seed=seed,
-             ddim_steps=ddim_steps, scale=scale, img_H=img_H, img_W=img_W, n_samples=n_samples,
-             n_iter=n_iter, ddim_eta=ddim_eta, output_path=args.out_dir)
+             ddim_steps=ddim_steps, scale=scale, img_H=img_H, img_W=img_W, n_samples=n_samples, n_iter=n_iter,
+             ddim_eta=ddim_eta, output_path=args.out_dir)
     return images, int(seed)
+
+
+def generate_type(status, prompt: str, init_img_path: str, canvas_init_path: str,
+                  text2img_seed=np.random.randint(1, 2147483646), img2img_seed=np.random.randint(1, 2147483646),
+                  text2img_ddim_steps=50, img2img_ddim_steps=50, strength=0.8, text2img_scale=7.5, img2img_scale=7.5,
+                  text2img_img_H=512, img2img_img_H=512, text2img_img_W=512, img2img_img_W=512,
+                  text2img_random_seed=False, img2img_random_seed=False, n_samples=4, n_iter=1, ddim_eta=0.0):
+    logging.info(f"Generate type: '{status}'")
+    if status == "Text to Img":
+        images, seed = text2img_infer(prompt, text2img_seed, text2img_ddim_steps, text2img_scale, text2img_img_H,
+                                      text2img_img_W, text2img_random_seed, n_samples, n_iter, ddim_eta)
+        return images, seed, None, img2img_seed
+    elif status == "Img to Img":
+        images, seed = img2img_infer(prompt, init_img_path, canvas_init_path, img2img_seed, img2img_ddim_steps,
+                                     strength, img2img_scale, img2img_img_H, img2img_img_W, img2img_random_seed,
+                                     n_samples, n_iter, ddim_eta)
+        return None, text2img_seed, images, seed
 
 
 def gr_advanced_vertical_page():
     global args
-
     with gr.Blocks(title="AI_with_Art", css="utils/text2img.css") as advanced_app:
-        with gr.Tab("Text to Img"):
-            with gr.Column():
-                with gr.Row():
-                    with gr.Column():
-                        with gr.Column():
-                            gr.Markdown("#### 提示词 - (请勿超过64个词)")
-                            prompt_box = gr.Textbox(label="prompts", lines=1, show_label=False)
-                            generate_button = gr.Button("开始绘画", elem_id="go_button")
-                            gr.Markdown("""[翻译器](https://www.deepl.com/translator)   [探索提示词](https://openart.ai/)
-                                        ---
-                                        """)
-                        output_gallery = gr.Gallery(interactive=False)
+        # prompt box
+        with gr.Box():
+            gr.Markdown("##### 提示词 - (请勿超过64个词)")
+            prompt_box = gr.Textbox(label="prompts", lines=1, placeholder="请输入提示词(请勿超过64个词)",
+                                    show_label=False)
+            generate_button = gr.Button("开始绘画", elem_classes="btn")
 
-                    with gr.Column():
-                        gr.Markdown("### 高级设置")
-                        with gr.Row():
-                            seed_box = gr.Number(label="Seed", value=np.random.randint(1, 2147483646),
-                                                 interactive=False,
-                                                 elem_id="seed_box")
-                            random_seed_checkbox = gr.Checkbox(label="Random Seed", value=True, interactive=True,
-                                                               elem_id="random_seed")
-                        with gr.Row():
-                            ddim_step_slider = gr.Slider(minimum=10, maximum=50, step=1, value=10, label="Steps",
-                                                         visible=True, interactive=True)
-                            scale_slider = gr.Slider(minimum=0, maximum=50, step=0.1, value=7.5,
-                                                     label="Guidance Scale", interactive=True)
-                        with gr.Row():
-                            img_H_slider = gr.Slider(minimum=384, maximum=512, step=64, value=512,
-                                                     label="Img Height", interactive=True)
-                            img_W_slider = gr.Slider(minimum=384, maximum=512, step=64, value=512,
-                                                     label="Img Width", interactive=True)
-                        gr.Markdown(value=parameter_description)
+            prompt_box.style(container=False)
+            generate_button.style(full_width=True)
 
-                ex = gr.Examples(examples=examples,
-                                 inputs=[prompt_box, ddim_step_slider, scale_slider, seed_box],
-                                 outputs=[output_gallery, seed_box],
-                                 fn=gr_interface_un_save,
-                                 examples_per_page=8,
-                                 cache_examples=True)
-                ex.dataset.headers = [""]
+        # text to img
+        with gr.Tab("Text to Img", id=0) as text2img:
+            with gr.Row():
+                with gr.Column():
+                    gr.Markdown("""#### Result images""")
+                    text2img_output_gallery = gr.Gallery(interactive=False, label="Result gallery")
 
-                gr.Markdown(prompt_note)
+                with gr.Column():
+                    gr.Markdown("### 高级设置")
+                    with gr.Row():
+                        text2img_seed_box = gr.Number(label="Seed", value=np.random.randint(1, 2147483646),
+                                                      interactive=False)
+                        text2img_random_seed_checkbox = gr.Checkbox(label="Random Seed", value=True)
+                    with gr.Row():
+                        text2img_ddim_step_slider = gr.Slider(minimum=10, maximum=50, step=1, value=10, label="Steps",
+                                                              visible=args.step_un_show)
+                        text2img_scale_slider = gr.Slider(minimum=0, maximum=50, step=0.1, value=7.5,
+                                                          label="Guidance Scale")
+                    with gr.Row():
+                        text2img_img_H_slider = gr.Slider(minimum=384, maximum=512, step=64, value=512,
+                                                          label="Img Height")
+                        text2img_img_W_slider = gr.Slider(minimum=384, maximum=512, step=64, value=512,
+                                                          label="Img Width")
+                    gr.Markdown(value=parameter_description)
 
-                # style
-                output_gallery.style(grid=2, height="auto")
-                generate_button.style(full_width=True)
-                prompt_box.style(rounded=(True, True, False, False), container=False)
-                generate_button.style(margin=False, rounded=(False, False, True, True), full_width=True)
+            ex = gr.Examples(examples=examples,
+                             inputs=[prompt_box, text2img_ddim_step_slider, text2img_scale_slider, text2img_seed_box],
+                             outputs=[text2img_output_gallery, text2img_seed_box], fn=gr_interface_un_save,
+                             examples_per_page=8, cache_examples=args.un_cache_examples)
+            ex.dataset.headers = [""]
 
-                # action
-                random_seed_checkbox.change(update_interactive,
-                                            inputs=[random_seed_checkbox],
-                                            outputs=[seed_box])
-
-                prompt_box.submit(text2img_infer,
-                                  inputs=[prompt_box, seed_box, ddim_step_slider, scale_slider, img_H_slider,
-                                          img_W_slider, random_seed_checkbox],
-                                  outputs=[output_gallery, seed_box])
-
-                generate_button.click(text2img_infer,
-                                      inputs=[prompt_box, seed_box, ddim_step_slider, scale_slider, img_H_slider,
-                                              img_W_slider, random_seed_checkbox],
-                                      outputs=[output_gallery, seed_box])
-
-        with gr.Tab("Img to Img"):
-            with gr.Column():
-                # gr.Column()   垂直      | gr.ROW()  水平
-                with gr.Row():
-                    with gr.Column():
-                        gr.Markdown("#### 提示词 - (请勿超过64个词)")
-                        prompt_box = gr.Textbox(label="prompts", lines=1, show_label=False)
-                        generate_button = gr.Button("开始绘画", elem_id="go_button")
-                        gr.Markdown("""[翻译器](https://www.deepl.com/translator)   [探索提示词](https://openart.ai/)
-                                    ---
-                                    """)
-                        init_image = gr.Image(shape=(512, 512), image_mode="RGB", source="upload",
-                                              type="filepath", tool="select", label="Init image",
-                                              show_label=True, interactive=True, visible=True,
-                                              elem_id="init_image")
-                        canvas_init_image = gr.Image(shape=(512, 512), image_mode="RGB", source="canvas",
-                                                     type="filepath", tool="select", label="Init image",
-                                                     show_label=True, interactive=True, visible=False,
-                                                     elem_id="init_image")
-                        switch_button = gr.Button(value="switch to canvas", show_label=False, elem_id="canvas_switch_btn")
-
-                    with gr.Column():
-                        gr.Markdown("""### 高级设置""")
-                        with gr.Row():
-                            seed_box = gr.Number(label="Seed", value=np.random.randint(1, 2147483646),
-                                                 interactive=False, elem_id="seed_box")
-                            random_seed_checkbox = gr.Checkbox(label="Random Seed", value=True, interactive=True,
-                                                               elem_id="random_seed")
-                        with gr.Row():
-                            ddim_step_slider = gr.Slider(minimum=10, maximum=50, step=1, value=10, label="Steps",
-                                                         visible=args.step_un_show, interactive=True)
-                            scale_slider = gr.Slider(minimum=0, maximum=50, step=0.1, value=7.5,
-                                                     label="Guidance Scale", interactive=True)
-                            strength_slider = gr.Slider(minimum=0, maximum=0.9, step=0.1, value=0.8,
-                                                        label="Strength", interactive=True)
-                        with gr.Row():
-                            img_H_slider = gr.Slider(minimum=256, maximum=512, step=64, value=512,
-                                                     label="Img Height", interactive=True,
-                                                     visible=args.show_img_HW)
-                            img_W_slider = gr.Slider(minimum=256, maximum=512, step=64, value=512,
-                                                     label="Img Width", interactive=True,
-                                                     visible=args.show_img_HW)
-                        gr.Markdown("""#### Result images""")
-                        output_gallery = gr.Gallery(interactive=True, label="Result gallery", show_label=False)
-
-                with gr.Row():
-                    with gr.Column():
-                        gr.Markdown(value=prompt_note)
-                    with gr.Column():
-                        gr.Markdown(value=parameter_description_img2img)
-
-                gr.Markdown(value=end_message)
+            gr.Markdown(prompt_note)
 
             # style
-            prompt_box.style(rounded=(True, True, False, False), container=False)
-            generate_button.style(margin=False, rounded=(False, False, True, True), full_width=True)
-            switch_button.style(margin=False, rounded=(False, False, True, True), full_width=True)
-            output_gallery.style(grid=2, height="auto")
+            text2img_output_gallery.style(columns=2, height="auto")
+
+            # action
+            text2img_random_seed_checkbox.change(update_interactive, inputs=[text2img_random_seed_checkbox],
+                                                 outputs=[text2img_seed_box])
+
+        with gr.Tab("Img to Img", id=1) as img2img:
+            with gr.Row():
+                with gr.Column():
+                    gr.Markdown("""#### Init image""")
+                    init_image = gr.Image(shape=(512, 512), image_mode="RGB", source="upload", type="filepath",
+                                          tool="select", label="Init image", show_label=True, visible=True)
+                    canvas_init_image = gr.Image(shape=(512, 512), image_mode="RGB", source="canvas", type="filepath",
+                                                 tool="select", label="Init image", show_label=True, visible=False)
+                    switch_button = gr.Button(value="switch to canvas", show_label=False, elem_classes="btn")
+
+                with gr.Column():
+                    gr.Markdown("""#### Result images""")
+                    img2img_output_gallery = gr.Gallery(label="Result gallery")
+
+            with gr.Row():
+                with gr.Column():
+                    gr.Markdown("""### 高级设置""")
+                    with gr.Row():
+                        img2img_seed_box = gr.Number(label="Seed", value=np.random.randint(1, 2147483646),
+                                                     interactive=False)
+                        img2img_random_seed_checkbox = gr.Checkbox(label="Random Seed", value=True)
+                        img2img_ddim_step_slider = gr.Slider(minimum=10, maximum=50, step=1, value=10, label="Steps",
+                                                             visible=args.step_un_show)
+                        img2img_scale_slider = gr.Slider(minimum=0, maximum=50, step=0.1, value=7.5,
+                                                         label="Guidance Scale")
+                        img2img_strength_slider = gr.Slider(minimum=0, maximum=0.9, step=0.1, value=0.8,
+                                                            label="Strength")
+                        img2img_img_H_slider = gr.Slider(minimum=256, maximum=512, step=64, value=512,
+                                                         label="Img Height", visible=args.show_img_HW)
+                        img2img_img_W_slider = gr.Slider(minimum=256, maximum=512, step=64, value=512,
+                                                         label="Img Width", visible=args.show_img_HW)
+
+            with gr.Row():
+                with gr.Column():
+                    gr.Markdown(value=prompt_note)
+                with gr.Column():
+                    gr.Markdown(value=parameter_description_img2img)
+
+            gr.Markdown(value=end_message)
+
+            # style
+            switch_button.style(full_width=True)
+            img2img_output_gallery.style(columns=2, height="auto")
 
             # action
             # seed
-            random_seed_checkbox.change(update_interactive,
-                                        inputs=[random_seed_checkbox],
-                                        outputs=[seed_box])
+            img2img_random_seed_checkbox.change(update_interactive, inputs=[img2img_random_seed_checkbox],
+                                                outputs=[img2img_seed_box])
 
             # switch upload and canvas
             switch_button.click(update_visible, inputs=[switch_button],
                                 outputs=[init_image, canvas_init_image, switch_button])
 
-            # prompt
-            prompt_box.submit(img2img_infer,
-                              inputs=[prompt_box, init_image, canvas_init_image, seed_box, ddim_step_slider,
-                                      strength_slider, scale_slider, img_H_slider, img_W_slider, random_seed_checkbox],
-                              outputs=[output_gallery, seed_box])
-            generate_button.click(img2img_infer,
-                                  inputs=[prompt_box, init_image, canvas_init_image, seed_box, ddim_step_slider,
-                                          strength_slider, scale_slider, img_H_slider, img_W_slider, random_seed_checkbox],
-                                  outputs=[output_gallery, seed_box])
+        # tab message state
+        used_tab = gr.State("Text to Img")
+        text2img.select(update_state_value, None, used_tab)
+        img2img.select(update_state_value, None, used_tab)
+
+        # generate action
+        prompt_box.submit(generate_type,
+                          inputs=[used_tab, prompt_box, init_image, canvas_init_image, text2img_seed_box,
+                                  img2img_seed_box, text2img_ddim_step_slider, img2img_ddim_step_slider,
+                                  img2img_strength_slider, text2img_scale_slider, img2img_scale_slider,
+                                  text2img_img_H_slider, img2img_img_H_slider, text2img_img_W_slider,
+                                  img2img_img_W_slider, text2img_random_seed_checkbox,
+                                  img2img_random_seed_checkbox],
+                          outputs=[text2img_output_gallery, text2img_seed_box, img2img_output_gallery,
+                                   img2img_seed_box])
+
+        generate_button.click(generate_type,
+                              inputs=[used_tab, prompt_box, init_image, canvas_init_image, text2img_seed_box,
+                                      img2img_seed_box, text2img_ddim_step_slider, img2img_ddim_step_slider,
+                                      img2img_strength_slider, text2img_scale_slider, img2img_scale_slider,
+                                      text2img_img_H_slider, img2img_img_H_slider, text2img_img_W_slider,
+                                      img2img_img_W_slider, text2img_random_seed_checkbox,
+                                      img2img_random_seed_checkbox],
+                              outputs=[text2img_output_gallery, text2img_seed_box, img2img_output_gallery,
+                                       img2img_seed_box])
 
     advanced_app.queue(concurrency_count=2, max_size=15)
     advanced_app.launch(show_error=False, server_port=6006, share=False, quiet=False)
@@ -353,15 +345,22 @@ def gr_advanced_vertical_page():
 if __name__ == '__main__':
     # args
     parser = argparse.ArgumentParser("Text2img && Img2img")
-    parser.add_argument("--out_dir", "-o", type=str, help="result output folder", nargs='?',
-                        default="/root/Image_synthesis_webpage/stable-diffusion/outputs/")
+    parser.add_argument("--out_dir", "-o", type=str, help="result output folder", nargs='?', default="./outputs")
     parser.add_argument("--ckpt", "-m", type=str, help="Stable-diffusion model checkpoint path",
-                        default="/root/Image_synthesis_webpage/stable-diffusion/models/v2-1_512-ema-pruned.ckpt")
+                        default="./models/v2-1_512-ema-pruned.ckpt")
     parser.add_argument("--config", "-c", type=str, help="Stable-diffusion model config path",
-                        default="/root/Image_synthesis_webpage/stable-diffusion/configs/stable-diffusion/v2-inference.yaml")
-    parser.add_argument("--step_un_show", "-u", action="store_false", help="whether step option is visible")
-    parser.add_argument("--show_img_HW", "-s", action="store_true", help="show img width and img height slider")
+                        default="./configs/stable-diffusion/v2-inference.yaml")
+    parser.add_argument("--step_un_show", action="store_false", help="whether step option is visible")
+    parser.add_argument("--un_cache_examples", action="store_true", help="Whether to cache examples")
+    parser.add_argument("--show_img_HW", action="store_true", help="show img width and img height slider")
     args = parser.parse_args()
+
+    # ------ 调试用参数 ------
+    args.out_dir = "/root/Image_synthesis_webpage/stable-diffusion/outputs/"
+    args.ckpt = "/root/Image_synthesis_webpage/stable-diffusion/models/realisticVisionV20_v20.safetensors"
+    args.config = "/root/Image_synthesis_webpage/stable-diffusion/configs/stable-diffusion/v1-inference.yaml"
+    args.un_cache_examples = False
+    # ------ 调试用参数 ------
 
     # profanity_filter
     profanity_filter = pron_filter("/root/Image_synthesis_webpage/stable-diffusion/utils/pron_blacklist.txt")
@@ -377,8 +376,8 @@ if __name__ == '__main__':
     global_index = 0
 
     # clear port
-    clear_port(6006)
     gr.close_all()
+    clear_port(6006)
 
     # load models
     all2img = all2img(ckpt=args.ckpt, config=args.config, output_dir=args.out_dir)

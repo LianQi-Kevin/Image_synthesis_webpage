@@ -1,9 +1,4 @@
-#go_button {
-    height: 40px;
-    max-height: 40px;
-}
-
-#canvas_switch_btn {
+.btn {
     height: 40px;
     max-height: 40px;
 }
