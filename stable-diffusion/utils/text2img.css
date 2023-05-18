@@ -3,12 +3,7 @@
     max-height: 40px;
 }
 
-/*#seed_box {*/
-/*    height: 40px;*/
-/*    max-height: 40px;*/
-/*}*/
-
-/*#random_seed {*/
-/*    height: 40px;*/
-/*    max-height: 40px;*/
-/*}*/
+#canvas_switch_btn {
+    height: 40px;
+    max-height: 40px;
+}

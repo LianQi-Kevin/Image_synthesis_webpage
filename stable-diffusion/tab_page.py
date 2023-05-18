@@ -208,47 +208,49 @@ def gr_advanced_vertical_page():
                 with gr.Row():
                     with gr.Column():
                         with gr.Column():
-                            with gr.Group():
-                                gr.Markdown("#### 提示词 - (请勿超过64个词)")
-                                prompt_box = gr.Textbox(label="prompts", lines=1, show_label=False)
-                                generate_button = gr.Button("开始绘画", elem_id="go_button").style(full_width="True")
-                            gr.Markdown("[翻译器](https://www.deepl.com/translator)   [探索提示词](https://openart.ai/)")
-                        # output_gallery = gr.Gallery(interactive=False).style(grid=[2], height="1024px")
-                        output_gallery = gr.Gallery(interactive=False).style(grid=[2], height="auto")
+                            gr.Markdown("#### 提示词 - (请勿超过64个词)")
+                            prompt_box = gr.Textbox(label="prompts", lines=1, show_label=False)
+                            generate_button = gr.Button("开始绘画", elem_id="go_button")
+                            gr.Markdown("""[翻译器](https://www.deepl.com/translator)   [探索提示词](https://openart.ai/)
+                                        ---
+                                        """)
+                        output_gallery = gr.Gallery(interactive=False)
 
                     with gr.Column():
                         gr.Markdown("### 高级设置")
-                        with gr.Group():
-                            with gr.Row():
-                                seed_box = gr.Number(label="Seed", value=np.random.randint(1, 2147483646),
-                                                     interactive=False,
-                                                     elem_id="seed_box")
-                                random_seed_checkbox = gr.Checkbox(label="Random Seed", value=True, interactive=True,
-                                                                   elem_id="random_seed")
-                            with gr.Row():
-                                ddim_step_slider = gr.Slider(minimum=10, maximum=50, step=1, value=10, label="Steps",
-                                                             visible=True, interactive=True)
-                                scale_slider = gr.Slider(minimum=0, maximum=50, step=0.1, value=7.5,
-                                                         label="Guidance Scale", interactive=True)
-                                img_H_slider = gr.Slider(minimum=384, maximum=512, step=64, value=512,
-                                                         label="Img Height", interactive=True)
-                                img_W_slider = gr.Slider(minimum=384, maximum=512, step=64, value=512,
-                                                         label="Img Width", interactive=True)
-                            gr.Markdown(value=parameter_description)
+                        with gr.Row():
+                            seed_box = gr.Number(label="Seed", value=np.random.randint(1, 2147483646),
+                                                 interactive=False,
+                                                 elem_id="seed_box")
+                            random_seed_checkbox = gr.Checkbox(label="Random Seed", value=True, interactive=True,
+                                                               elem_id="random_seed")
+                        with gr.Row():
+                            ddim_step_slider = gr.Slider(minimum=10, maximum=50, step=1, value=10, label="Steps",
+                                                         visible=True, interactive=True)
+                            scale_slider = gr.Slider(minimum=0, maximum=50, step=0.1, value=7.5,
+                                                     label="Guidance Scale", interactive=True)
+                        with gr.Row():
+                            img_H_slider = gr.Slider(minimum=384, maximum=512, step=64, value=512,
+                                                     label="Img Height", interactive=True)
+                            img_W_slider = gr.Slider(minimum=384, maximum=512, step=64, value=512,
+                                                     label="Img Width", interactive=True)
+                        gr.Markdown(value=parameter_description)
 
                 ex = gr.Examples(examples=examples,
                                  inputs=[prompt_box, ddim_step_slider, scale_slider, seed_box],
                                  outputs=[output_gallery, seed_box],
                                  fn=gr_interface_un_save,
-                                 examples_per_page=15,
+                                 examples_per_page=8,
                                  cache_examples=True)
                 ex.dataset.headers = [""]
 
                 gr.Markdown(prompt_note)
 
                 # style
+                output_gallery.style(grid=2, height="auto")
+                generate_button.style(full_width=True)
                 prompt_box.style(rounded=(True, True, False, False), container=False)
-                generate_button.style(margin=False, rounded=(False, False, True, True), full_width="True")
+                generate_button.style(margin=False, rounded=(False, False, True, True), full_width=True)
 
                 # action
                 random_seed_checkbox.change(update_interactive,
@@ -270,45 +272,43 @@ def gr_advanced_vertical_page():
                 # gr.Column()   垂直      | gr.ROW()  水平
                 with gr.Row():
                     with gr.Column():
-                        with gr.Group():
-                            gr.Markdown("#### 提示词 - (请勿超过64个词)")
-                            prompt_box = gr.Textbox(label="prompts", lines=1, show_label=False)
-                            generate_button = gr.Button("开始绘画", elem_id="go_button")
-                        gr.Markdown("""
-                        #### [翻译器](https://www.deepl.com/translator)   [探索提示词](https://openart.ai/)
-                        ---
-                        """)
-                        with gr.Group():
-                            init_image = gr.Image(shape=(512, 512), image_mode="RGB", source="upload",
-                                                  type="filepath", tool="select", label="Init image",
-                                                  show_label=True, interactive=True, visible=True,
-                                                  elem_id="init_image")
-                            canvas_init_image = gr.Image(shape=(512, 512), image_mode="RGB", source="canvas",
-                                                         type="filepath", tool="select", label="Init image",
-                                                         show_label=True, interactive=True, visible=False,
-                                                         elem_id="init_image")
-                            switch_button = gr.Button(value="switch to canvas", show_label=False)
+                        gr.Markdown("#### 提示词 - (请勿超过64个词)")
+                        prompt_box = gr.Textbox(label="prompts", lines=1, show_label=False)
+                        generate_button = gr.Button("开始绘画", elem_id="go_button")
+                        gr.Markdown("""[翻译器](https://www.deepl.com/translator)   [探索提示词](https://openart.ai/)
+                                    ---
+                                    """)
+                        init_image = gr.Image(shape=(512, 512), image_mode="RGB", source="upload",
+                                              type="filepath", tool="select", label="Init image",
+                                              show_label=True, interactive=True, visible=True,
+                                              elem_id="init_image")
+                        canvas_init_image = gr.Image(shape=(512, 512), image_mode="RGB", source="canvas",
+                                                     type="filepath", tool="select", label="Init image",
+                                                     show_label=True, interactive=True, visible=False,
+                                                     elem_id="init_image")
+                        switch_button = gr.Button(value="switch to canvas", show_label=False, elem_id="canvas_switch_btn")
 
                     with gr.Column():
                         gr.Markdown("""### 高级设置""")
-                        with gr.Group():
-                            with gr.Row():
-                                seed_box = gr.Number(label="Seed", value=np.random.randint(1, 2147483646),
-                                                     interactive=False, elem_id="seed_box")
-                                random_seed_checkbox = gr.Checkbox(label="Random Seed", value=True, interactive=True,
-                                                                   elem_id="random_seed")
-                                ddim_step_slider = gr.Slider(minimum=10, maximum=50, step=1, value=10, label="Steps",
-                                                             visible=args.step_un_show, interactive=True)
-                                scale_slider = gr.Slider(minimum=0, maximum=50, step=0.1, value=7.5,
-                                                         label="Guidance Scale", interactive=True)
-                                strength_slider = gr.Slider(minimum=0, maximum=0.9, step=0.1, value=0.8,
-                                                            label="Strength", interactive=True)
-                                img_H_slider = gr.Slider(minimum=256, maximum=512, step=64, value=512,
-                                                         label="Img Height", interactive=True,
-                                                         visible=args.show_img_HW)
-                                img_W_slider = gr.Slider(minimum=256, maximum=512, step=64, value=512,
-                                                         label="Img Width", interactive=True,
-                                                         visible=args.show_img_HW)
+                        with gr.Row():
+                            seed_box = gr.Number(label="Seed", value=np.random.randint(1, 2147483646),
+                                                 interactive=False, elem_id="seed_box")
+                            random_seed_checkbox = gr.Checkbox(label="Random Seed", value=True, interactive=True,
+                                                               elem_id="random_seed")
+                        with gr.Row():
+                            ddim_step_slider = gr.Slider(minimum=10, maximum=50, step=1, value=10, label="Steps",
+                                                         visible=args.step_un_show, interactive=True)
+                            scale_slider = gr.Slider(minimum=0, maximum=50, step=0.1, value=7.5,
+                                                     label="Guidance Scale", interactive=True)
+                            strength_slider = gr.Slider(minimum=0, maximum=0.9, step=0.1, value=0.8,
+                                                        label="Strength", interactive=True)
+                        with gr.Row():
+                            img_H_slider = gr.Slider(minimum=256, maximum=512, step=64, value=512,
+                                                     label="Img Height", interactive=True,
+                                                     visible=args.show_img_HW)
+                            img_W_slider = gr.Slider(minimum=256, maximum=512, step=64, value=512,
+                                                     label="Img Width", interactive=True,
+                                                     visible=args.show_img_HW)
                         gr.Markdown("""#### Result images""")
                         output_gallery = gr.Gallery(interactive=True, label="Result gallery", show_label=False)
 
@@ -322,10 +322,9 @@ def gr_advanced_vertical_page():
 
             # style
             prompt_box.style(rounded=(True, True, False, False), container=False)
-            generate_button.style(margin=False, rounded=(False, False, True, True), full_width="True")
-            switch_button.style(margin=False, rounded=(False, False, True, True), full_width="True")
-            # output_gallery.style(grid=2, height="1024px")
-            output_gallery.style(grid=[2], height="auto")
+            generate_button.style(margin=False, rounded=(False, False, True, True), full_width=True)
+            switch_button.style(margin=False, rounded=(False, False, True, True), full_width=True)
+            output_gallery.style(grid=2, height="auto")
 
             # action
             # seed
@@ -372,7 +371,7 @@ if __name__ == '__main__':
     init_warning_img = Image.open("/root/Image_synthesis_webpage/stable-diffusion/utils/add_init_img.png")
 
     # logging set
-    log_set(show_level=logging.INFO, save_level=logging.INFO)
+    log_set(log_level=logging.INFO, log_save=True)
 
     # global save index
     global_index = 0
