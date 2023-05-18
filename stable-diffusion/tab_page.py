@@ -393,7 +393,7 @@ if __name__ == '__main__':
     parser.add_argument("--config", "-c", type=str, help="Stable-diffusion model config path",
                         default="./configs/stable-diffusion/v2-inference.yaml")
     parser.add_argument("--step_un_show", action="store_false", help="whether step option is visible")
-    parser.add_argument("--un_cache_examples", action="store_true", help="Whether to cache examples")
+    parser.add_argument("--un_cache_examples", action="store_false", help="Whether to cache examples")
     parser.add_argument("--show_img_HW", action="store_true", help="show img width and img height slider")
     args = parser.parse_args()
 
