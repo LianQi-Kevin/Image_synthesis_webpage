@@ -14,7 +14,8 @@ from utils.all2img import all2img
 from utils.prompt_note import parameter_description_img2img, parameter_description
 from utils.prompt_note import prompt_note, end_message, examples
 from utils.pron_filter import blacklist_filter as ProfanityFilter
-from utils.utils import log_set, concat_img, clear_port
+from utils.utils import concat_img, clear_port
+from utils.logging_utils import log_set
 
 
 # build save path and save images(grid_image, init_image, samples)
@@ -201,7 +202,7 @@ def img2img_infer(prompt, init_img_path, canvas_init_path, seed=np.random.randin
 def gr_advanced_vertical_page():
     global args
 
-    with gr.Blocks(title="AI With ART", css="utils/text2img.css") as advanced_app:
+    with gr.Blocks(title="AI_with_Art", css="utils/text2img.css") as advanced_app:
         with gr.Tab("Text to Img"):
             with gr.Column():
                 with gr.Row():
@@ -212,7 +213,8 @@ def gr_advanced_vertical_page():
                                 prompt_box = gr.Textbox(label="prompts", lines=1, show_label=False)
                                 generate_button = gr.Button("开始绘画", elem_id="go_button").style(full_width="True")
                             gr.Markdown("[翻译器](https://www.deepl.com/translator)   [探索提示词](https://openart.ai/)")
-                        output_gallery = gr.Gallery(interactive=False).style(grid=2, height="1024px")
+                        # output_gallery = gr.Gallery(interactive=False).style(grid=[2], height="1024px")
+                        output_gallery = gr.Gallery(interactive=False).style(grid=[2], height="auto")
 
                     with gr.Column():
                         gr.Markdown("### 高级设置")
@@ -322,7 +324,8 @@ def gr_advanced_vertical_page():
             prompt_box.style(rounded=(True, True, False, False), container=False)
             generate_button.style(margin=False, rounded=(False, False, True, True), full_width="True")
             switch_button.style(margin=False, rounded=(False, False, True, True), full_width="True")
-            output_gallery.style(grid=2, height="1024px")
+            # output_gallery.style(grid=2, height="1024px")
+            output_gallery.style(grid=[2], height="auto")
 
             # action
             # seed

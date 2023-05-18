@@ -1,22 +1,39 @@
-import argparse
-import os
-import time
 import logging
+import os
 from contextlib import nullcontext
 
+import PIL
 import numpy as np
 import torch
-import PIL
 from PIL import Image
-from einops import rearrange, repeat
+import einops
 from ldm.models.diffusion.ddim import DDIMSampler
 from ldm.models.diffusion.plms import PLMSSampler
 from ldm.util import instantiate_from_config
 from omegaconf import OmegaConf
 from pytorch_lightning import seed_everything
+from safetensors.torch import load_file
 from torch import autocast
 from torchvision.utils import make_grid
 from tqdm import tqdm, trange
+
+
+def replace_complex_with_basic(obj):
+    if isinstance(obj, dict):
+        return {str(k): replace_complex_with_basic(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [replace_complex_with_basic(item) for item in obj]
+    elif isinstance(obj, tuple):
+        return tuple([replace_complex_with_basic(item) for item in obj])
+    elif isinstance(obj, set):
+        return set([replace_complex_with_basic(item) for item in obj])
+    elif isinstance(obj, frozenset):
+        return frozenset([replace_complex_with_basic(item) for item in obj])
+    elif isinstance(obj, (int, float, str)):
+        return obj
+    else:
+        return str(obj)
+
 
 
 class all2img(object):
@@ -51,12 +68,24 @@ class all2img(object):
     def _load_model(self, verbose=False):
         config = OmegaConf.load(self.config)
         logging.info("Loading model from {}".format(self.ckpt))
-        pl_sd = torch.load(self.ckpt, map_location="cpu")
-        if "global_step" in pl_sd:
-            logging.info("Global Step: {}".format(pl_sd['global_step']))
-        sd = pl_sd["state_dict"]
+        _, suffix = os.path.splitext(self.ckpt)
+        if suffix == ".ckpt":
+            pl_sd = torch.load(self.ckpt, map_location="cpu")
+            if "global_step" in pl_sd:
+                logging.info("Global Step: {}".format(pl_sd['global_step']))
+            pl_sd = pl_sd["state_dict"]
+        elif suffix == ".safetensors":
+            pl_sd = load_file(self.ckpt, device="cpu")
+        else:
+            raise TypeError(f"Unsupported {suffix} model")
+
+        # write model item
+        with open(f"/root/Image_synthesis_webpage/stable-diffusion/{os.path.basename(self.ckpt)}.json", "w") as f:
+            import json
+            json.dump(replace_complex_with_basic(pl_sd), f, sort_keys=True, indent=2)
+
         model = instantiate_from_config(config.model)
-        m, u = model.load_state_dict(sd, strict=False)
+        m, u = model.load_state_dict(pl_sd, strict=False)
         if len(m) > 0 and verbose:
             print("missing keys:")
             print(m)
@@ -84,7 +113,7 @@ class all2img(object):
         image = torch.from_numpy(image)
         # make grid
         init_image = (2. * image - 1.).to(self.device)
-        init_image = repeat(init_image, '1 ... -> b ...', b=batch_size)
+        init_image = einops.repeat(init_image, '1 ... -> b ...', b=batch_size)
         init_latent = self.model.get_first_stage_encoding(
             self.model.encode_first_stage(init_image))  # move to latent space
         return init_latent
@@ -121,14 +150,14 @@ class all2img(object):
             images_list = list()
             for x_samples_ddim in all_samples:
                 for x_sample in x_samples_ddim:
-                    x_sample = 255. * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
+                    x_sample = 255. * einops.rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
                     images_list.append(Image.fromarray(x_sample.astype(np.uint8)))
             return images_list
         else:
             grid = torch.stack(all_samples, 0)
-            grid = rearrange(grid, 'n b c h w -> (n b) c h w')
+            grid = einops.rearrange(grid, 'n b c h w -> (n b) c h w')
             grid = make_grid(grid, nrow=self.n_rows)
-            grid = 255. * rearrange(grid, 'c h w -> h w c').cpu().numpy()
+            grid = 255. * einops.rearrange(grid, 'c h w -> h w c').cpu().numpy()
             return [Image.fromarray(grid.astype(np.uint8))]
 
     # text2img synthesis
@@ -258,3 +287,35 @@ class all2img(object):
                             x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
                             all_samples.append(x_samples)
         return all_samples
+
+
+if __name__ == '__main__':
+    # test code
+    prompt = "sunset, sun rays showing through the woods in front, clear night sky, stars visible, mountain in the back, lake in front reflecting the night sky and mountain, photo realistic, 8K, ultra high definition, cinematic"
+
+    # config_path = "/root/Image_synthesis_webpage/stable-diffusion/configs/stable-diffusion/v2-inference.yaml"
+    # ckpt_path = "/root/Image_synthesis_webpage/stable-diffusion/models/v2-1_512-ema-pruned.ckpt"
+    # config_path = "/root/Image_synthesis_webpage/stable-diffusion/configs/stable-diffusion/v1-inference.yaml"
+    # ckpt_path = "/root/Image_synthesis_webpage/stable-diffusion/models/v1-5-pruned-emaonly.ckpt"
+    config_path = "/root/Image_synthesis_webpage/stable-diffusion/configs/stable-diffusion/v1-inference.yaml"
+    ckpt_path = "/root/Image_synthesis_webpage/stable-diffusion/models/realisticVisionV20_v20.safetensors"
+
+    seed = 114514
+    ddim_steps = 50
+    scale = 7.5
+    img_H = 512
+    img_W = 512
+    n_samples = 4
+    n_iter = 1
+    ddim_eta = 0.0
+
+    all2img = all2img(
+        ckpt=ckpt_path,
+        config=config_path,
+        output_dir="/root/Image_synthesis_webpage/stable-diffusion/outputs")
+
+    all_samples = all2img.text2img(prompt, seed=seed, n_samples=n_samples, n_iter=n_iter,
+                                   img_H=img_H, img_W=img_W, ddim_steps=ddim_steps, scale=scale,
+                                   ddim_eta=ddim_eta)
+
+    all2img.save_img(all_samples)

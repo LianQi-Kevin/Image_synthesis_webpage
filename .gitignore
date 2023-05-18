@@ -4,6 +4,7 @@
 *.log
 *example.docx
 *test.py
+*.bk
 
 .idea
 .ipynb_checkpoints

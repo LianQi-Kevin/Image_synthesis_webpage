@@ -3,6 +3,7 @@ ckpt_path="/root/Image_synthesis_webpage/stable-diffusion/models/v2-1_512-ema-pr
 
 #create output folder
 mkdir -p $out_dir
+
 #create tmp folders
 mkdir -p "/root/autodl-tmp/models"
 mkdir -p "/root/autodl-tmp/outputs"

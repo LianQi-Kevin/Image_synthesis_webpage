@@ -14,7 +14,8 @@ from utils.img2img import img2img
 from utils.prompt_note import parameter_description_img2img as parameter_description
 from utils.prompt_note import prompt_note, end_message
 from utils.pron_filter import blacklist_filter as ProfanityFilter
-from utils.utils import log_set, concat_img, clear_port
+from utils.utils import concat_img, clear_port
+from utils.logging_utils import log_set
 
 
 # build save path and save images(grid_image, init_image, samples)
@@ -154,7 +155,7 @@ def gr_interface(prompt, init_img_path, seed=np.random.randint(1, 2147483646), d
 # gradio page
 def gr_advanced_vertical_page():
     global args
-    with gr.Blocks(title="AI With ART", css="utils/text2img.css") as advanced_app:
+    with gr.Blocks(title="AI_with_Art", css="utils/text2img.css") as advanced_app:
         with gr.Column():
             # gr.Column()   垂直      | gr.ROW()  水平
             with gr.Row():
@@ -251,7 +252,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # logging set
-    log_set(show_level=logging.INFO, save_level=logging.INFO)
+    log_set(log_level=logging.INFO, log_save=True)
 
     # clear port
     clear_port(port=6006)

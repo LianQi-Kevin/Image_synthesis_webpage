@@ -11,27 +11,7 @@ from PIL import Image
 from utils.pron_filter import blacklist_filter as ProfanityFilter
 from utils.prompt_note import prompt_note, examples, parameter_description
 from utils.text2img import make_args, text2img
-
-
-def log_set():
-    logger = logging.getLogger()  # 不加名称设置root logger
-    logger.setLevel(logging.DEBUG)
-    # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s: - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-
-    # 使用FileHandler输出到文件
-    fh = logging.FileHandler('log.log')
-    fh.setLevel(logging.INFO)
-    fh.setFormatter(formatter)
-
-    # 使用StreamHandler输出到屏幕
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    ch.setFormatter(formatter)
-
-    # 添加两个Handler
-    logger.addHandler(ch)
-    logger.addHandler(fh)
+from utils.logging_utils import log_set
 
 
 def concat_img(images, grid_size=2, img_H=512, img_W=512):
@@ -131,8 +111,7 @@ def gr_interface(prompt, seed=np.random.randint(1, 2147483646), ddim_steps=50, s
                                         ddim_eta=ddim_eta)
         images = txt2img.postprocess(all_samples, single=True)
         output_path = "/root/Image_synthesis_webpage/stable-diffusion/outputs/"
-        save_img(images, prompt, seed, ddim_steps, scale, img_H, img_W, n_samples, n_iter, ddim_eta,
-                 output_path=output_path)
+        save_img(images, prompt, seed, ddim_steps, scale, img_H, img_W, n_samples, n_iter, ddim_eta, output_path=output_path)
         return images, int(seed)
 
 
@@ -160,9 +139,12 @@ def update_interactive(advanced_page):
 
 
 def gr_advanced_page():
-    with gr.Blocks(title="AI With ART", css="utils/text2img.css") as advanced_app:
+    with gr.Blocks(title="109美术高中AI与美术融合课", css="utils/text2img.css") as advanced_app:
         # gr.Column()   垂直      | gr.ROW()  水平
         with gr.Column():
+            gr.Markdown("""## 109美术高中AI与美术融合课
+            - - -
+            """)
             with gr.Row():
                 with gr.Column():
                     with gr.Column():
@@ -179,8 +161,7 @@ def gr_advanced_page():
                         gr.Markdown("### 高级设置")
                         with gr.Group():
                             with gr.Row():
-                                seed_box = gr.Number(label="Seed", value=np.random.randint(1, 2147483646),
-                                                     interactive=False,
+                                seed_box = gr.Number(label="Seed", value=np.random.randint(1, 2147483646), interactive=False,
                                                      elem_id="seed_box")
                                 random_seed_checkbox = gr.Checkbox(label="Random Seed", value=True, interactive=True,
                                                                    elem_id="random_seed")
@@ -230,13 +211,16 @@ def gr_advanced_page():
                               outputs=[output_gallery, seed_box])
 
     advanced_app.launch(server_port=6006, share=False, quiet=False, show_error=False, enable_queue=False)
-    advanced_app.queue(concurrency_count=3, )
+    advanced_app.queue(concurrency_count=3,)
 
 
 def gr_advanced_vertical_page():
-    with gr.Blocks(title="AI With ART", css="utils/text2img.css") as advanced_app:
+    with gr.Blocks(title="109美术高中AI与美术融合课", css="utils/text2img.css") as advanced_app:
         # gr.Column()   垂直      | gr.ROW()  水平
         with gr.Column():
+            gr.Markdown("""## 109美术高中AI与美术融合课
+                - - -
+                """)
             with gr.Row():
                 with gr.Column():
                     with gr.Column():
@@ -297,18 +281,18 @@ def gr_advanced_vertical_page():
                               outputs=[output_gallery, seed_box])
 
     advanced_app.launch(server_port=6006, share=False, quiet=False, show_error=False, enable_queue=True)
+    # advanced_app.queue(concurrency_count=1, status_update_rate="auto", )
 
 
 if __name__ == '__main__':
     # args
     opt = make_args()
-    log_set()
+    log_set(log_level=logging.INFO, log_save=True)
     global_index = 0
 
     # ----------
     # 调试用 覆盖args
     opt.config = "/root/Image_synthesis_webpage/stable-diffusion/configs/stable-diffusion/v2-inference.yaml"
-    # opt.ckpt = "/root/Image_synthesis_webpage/stable-diffusion/models/v1-5-stable-diffuion.ckpt"
     opt.ckpt = "/root/Image_synthesis_webpage/stable-diffusion/models/v2-1_512-ema-pruned.ckpt"
     opt.out_dir = "/root/Image_synthesis_webpage/stable-diffusion/outputs/"  # output dir
     # ----------

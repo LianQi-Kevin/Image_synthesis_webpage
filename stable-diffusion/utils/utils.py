@@ -1,28 +1,7 @@
-import logging
 import os
 import time
 
 from PIL import Image
-
-
-def log_set(show_level=logging.DEBUG, save_level=logging.INFO):
-    logger = logging.getLogger()  # 不加名称设置root logger
-    logger.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s: - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-
-    # 使用FileHandler输出到文件
-    fh = logging.FileHandler('log.log')
-    fh.setLevel(save_level)
-    fh.setFormatter(formatter)
-
-    # 使用StreamHandler输出到屏幕
-    ch = logging.StreamHandler()
-    ch.setLevel(show_level)
-    ch.setFormatter(formatter)
-
-    # 添加两个Handler
-    logger.addHandler(ch)
-    logger.addHandler(fh)
 
 
 def concat_img(images, grid_size=2, img_H=512, img_W=512) -> Image:
