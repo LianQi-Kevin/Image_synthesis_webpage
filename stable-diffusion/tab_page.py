@@ -398,10 +398,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # ------ 调试用参数 ------
-    args.out_dir = "/root/Image_synthesis_webpage/stable-diffusion/outputs/"
-    args.ckpt = "/root/Image_synthesis_webpage/stable-diffusion/models/realisticVisionV20_v20.safetensors"
-    args.config = "/root/Image_synthesis_webpage/stable-diffusion/configs/stable-diffusion/v1-inference.yaml"
-    args.un_cache_examples = False
+    # args.out_dir = "/root/Image_synthesis_webpage/stable-diffusion/outputs/"
+    # args.ckpt = "/root/Image_synthesis_webpage/stable-diffusion/models/realisticVisionV20_v20.safetensors"
+    # args.config = "/root/Image_synthesis_webpage/stable-diffusion/configs/stable-diffusion/v1-inference.yaml"
+    # args.un_cache_examples = False
     # ------ 调试用参数 ------
 
     # profanity_filter
