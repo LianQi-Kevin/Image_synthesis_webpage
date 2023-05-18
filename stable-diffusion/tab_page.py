@@ -208,7 +208,7 @@ def generate_type(status, prompt: str, init_img_path: str, canvas_init_path: str
 
 def gr_advanced_vertical_page():
     global args
-    with gr.Blocks(title="AI_with_Art", css="utils/text2img.css") as advanced_app:
+    with gr.Blocks(title="AI_with_Art", css="utils/all2img.css") as advanced_app:
         # prompt box
         with gr.Box():
             gr.Markdown("##### 提示词 - (请勿超过64个词)")
@@ -312,10 +312,15 @@ def gr_advanced_vertical_page():
             switch_button.click(update_visible, inputs=[switch_button],
                                 outputs=[init_image, canvas_init_image, switch_button])
 
+        with gr.Tab("Prompt Translate", id=2) as prompt_translate:
+            target_language = gr.Dropdown(choices=["中文", "英文"], value="英文", label="Target Language", type="value",
+                                          multiselect=False, allow_custom_value=False, interactive=True)
+
         # tab message state
         used_tab = gr.State("Text to Img")
         text2img.select(update_state_value, None, used_tab)
         img2img.select(update_state_value, None, used_tab)
+        prompt_translate.select(update_state_value, None, used_tab)
 
         # generate action
         prompt_box.submit(generate_type,
